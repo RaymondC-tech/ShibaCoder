@@ -41,7 +41,7 @@ function CreateLobbyForm({ onCreateRoom }) {
         <img 
           src="/logo.svg" 
           alt="ShibaCoder Logo" 
-          className="h-32 w-32 mb-4"
+          className="h-48 w-48 mb-4 float-animation"
           style={{ imageRendering: 'auto', objectFit: 'contain' }}
         />
         <p className="text-xs">Create your coding battle arena!</p>

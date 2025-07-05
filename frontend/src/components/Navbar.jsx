@@ -6,7 +6,7 @@ function Navbar() {
           <img 
             src="/logo.svg" 
             alt="ShibaCoder Logo" 
-            className="h-12 w-12"
+            className="h-16 w-16"
             style={{ imageRendering: 'auto', objectFit: 'contain' }}
           />
           <div className="flex items-center gap-2">

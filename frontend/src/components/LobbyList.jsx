@@ -106,7 +106,7 @@ function LobbyList({ onCreateLobby, onJoinLobby }) {
             <img 
               src="/logo.svg" 
               alt="ShibaCoder Logo" 
-              className="h-10 w-10"
+              className="h-14 w-14"
               style={{ imageRendering: 'auto', objectFit: 'contain' }}
             />
             Active Lobbies
