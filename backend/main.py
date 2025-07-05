@@ -467,6 +467,7 @@ async def handle_create_lobby(client_id: str, data: dict):
         lobby_name = data.get("name", "").strip()
         lobby_type = data.get("type", "public")
         pin = data.get("pin", "")
+        elo_range = data.get("eloRange", "easy")
         
         if not lobby_name:
             await send_to_client(client_id, "error", {"message": "Lobby name is required"})
@@ -502,6 +503,7 @@ async def handle_create_lobby(client_id: str, data: dict):
             "type": lobby_type,
             "pin": pin if lobby_type == "private" else None,
             "status": "waiting",
+            "elo_range": elo_range,
             "players": [{
                 "id": client_id,
                 "name": player_name,

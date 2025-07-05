@@ -187,7 +187,19 @@ function LobbyList({ onCreateLobby, onJoinLobby }) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div>
-                      <h3 className="text-sm font-bold text-amber-900">{lobby.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-amber-900">{lobby.name}</h3>
+                        {lobby.elo_range && (
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            lobby.elo_range === 'easy' ? 'bg-green-100 text-green-800' :
+                            lobby.elo_range === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {lobby.elo_range === 'easy' ? '🟢' :
+                             lobby.elo_range === 'medium' ? '🟡' : '🔴'}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-600 mt-1">
                         Status: {lobby.status === 'waiting' ? 'Waiting for players' : lobby.status}
                       </p>
