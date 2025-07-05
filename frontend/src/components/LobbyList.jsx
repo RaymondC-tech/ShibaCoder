@@ -47,6 +47,7 @@ function LobbyList({ onCreateLobby, onJoinLobby }) {
     } else {
       // Join public lobby directly
       joinLobby(lobby.id)
+      // The UI transition to waiting room will happen automatically via App.jsx useEffect
     }
   }
 
@@ -56,6 +57,7 @@ function LobbyList({ onCreateLobby, onJoinLobby }) {
       joinLobby(selectedLobby.id, pinInput)
       setShowPasswordModal(false)
       setPinInput('')
+      // The UI transition to waiting room will happen automatically via App.jsx useEffect
     }
   }
 

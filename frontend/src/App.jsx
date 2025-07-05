@@ -1,41 +1,74 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Navbar from './components/Navbar'
 import LobbyList from './components/LobbyList'
 import CreateLobbyForm from './components/CreateLobbyForm'
 import GameRoom from './components/GameRoom'
 import Modal from './components/Modal'
 import CloudBackground from './components/CloudBackground'
-import { Browser } from 'react-kawaii'
+import WaitingRoom from './components/WaitingRoom'
+import { useLobby } from './hooks/useLobby'
 import './App.css'
 
 function App() {
   const [gameState, setGameState] = useState('lobbyList')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [playerName, setPlayerName] = useState('')
-  const [roomCode, setRoomCode] = useState('')
+
+  const { 
+    currentLobby, 
+    players, 
+    connected, 
+    error,
+    leaveLobby 
+  } = useLobby()
+
+  // Watch for lobby state changes to update game state
+  useEffect(() => {
+    if (currentLobby) {
+      // When we join/create a lobby, go to waiting room
+      if (currentLobby.status === 'waiting') {
+        setGameState('waiting')
+        // Get player name from localStorage if available
+        const savedName = localStorage.getItem('shibacoder_player_name')
+        if (savedName) {
+          setPlayerName(savedName)
+        }
+      }
+      // When game starts, go to playing state
+      else if (currentLobby.status === 'playing') {
+        setGameState('playing')
+      }
+    } else {
+      // When we leave lobby or get disconnected, go back to lobby list
+      setGameState('lobbyList')
+    }
+  }, [currentLobby])
 
   const handleCreateLobby = () => {
     setShowCreateModal(true)
   }
 
   const handleJoinRoom = (lobbyId, pin) => {
-    // In a real app, this would validate with the backend
-    // For now, generate a room code for demo purposes
-    const roomCode = Math.floor(1000 + Math.random() * 9000).toString()
-    setRoomCode(roomCode)
-    setGameState('waiting')
+    // Socket.IO join logic is already handled in LobbyList component
+    // This function is kept for compatibility but the real work happens in useLobby hook
+    console.log('Joining lobby:', lobbyId, pin ? 'with PIN' : 'public')
   }
 
   const handleCreateRoom = (lobbyData) => {
-    setPlayerName(lobbyData.name)
-    setRoomCode(lobbyData.roomCode)
+    // Socket.IO create logic is already handled in CreateLobbyForm component
+    // Store player name and close modal
+    setPlayerName(lobbyData.playerName)
     setShowCreateModal(false)
-    setGameState('waiting')
-    // In a real app, this would create the room on the backend
+    console.log('Creating lobby:', lobbyData)
   }
 
   const handleGameStart = () => {
     setGameState('playing')
+  }
+
+  const handleLeaveLobby = () => {
+    leaveLobby()
+    setGameState('lobbyList')
   }
 
   return (
@@ -61,36 +94,23 @@ function App() {
           </>
         )}
         
-        {gameState === 'waiting' && (
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-68px)] p-4">
-            <div className="nes-container with-title is-centered bg-white">
-              <p className="title">Waiting Room</p>
-              <div className="flex flex-col items-center space-y-4">
-                <Browser size={150} mood="shocked" color="#FDB7DA" />
-                <p className="text-sm animate-pulse">Waiting for opponent...</p>
-                <div className="nes-badge is-splited">
-                  <span className="is-dark">Room</span>
-                  <span className="is-warning">{roomCode}</span>
-                </div>
-                <p className="text-xs text-gray-600 mt-4">Share this code with your friend!</p>
-                
-                {/* Simulate game start for demo */}
-                <button
-                  type="button"
-                  className="nes-btn is-primary text-xs mt-4"
-                  onClick={handleGameStart}
-                >
-                  Start Game (Demo)
-                </button>
-              </div>
-            </div>
-          </div>
+        {gameState === 'waiting' && currentLobby && (
+          <WaitingRoom 
+            lobby={currentLobby}
+            players={players}
+            playerName={playerName}
+            connected={connected}
+            error={error}
+            onLeaveLobby={handleLeaveLobby}
+            onGameStart={handleGameStart}
+          />
         )}
         
-        {gameState === 'playing' && (
+        {gameState === 'playing' && currentLobby && (
           <GameRoom 
+            lobby={currentLobby}
+            players={players}
             playerName={playerName}
-            roomCode={roomCode}
           />
         )}
       </div>

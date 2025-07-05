@@ -77,6 +77,19 @@ export const useLobby = () => {
       setError(null)
     })
 
+    // Game start event
+    socket.on('game_start', (data) => {
+      console.log('Game started:', data)
+      if (currentLobby) {
+        setCurrentLobby(prev => ({
+          ...prev,
+          status: 'playing',
+          problem: data.problem
+        }))
+      }
+      setError(null)
+    })
+
     // Error handling
     socket.on('error', (data) => {
       console.error('Socket error:', data)
@@ -92,6 +105,7 @@ export const useLobby = () => {
       socket.off('player_joined')
       socket.off('player_left')
       socket.off('lobby_left')
+      socket.off('game_start')
       socket.off('error')
     }
   }, [socket, currentLobby])
