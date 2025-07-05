@@ -4,6 +4,7 @@ import { useLobby } from '../hooks/useLobby';
 import AttackQuestions from './AttackQuestions';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { sounds } from '../utils/sounds';
+import { incrementWins, incrementLosses } from '../utils/playerStats';
 import './GameRoom.css';
 
 function GameRoom({ lobby, players, playerName }) {
@@ -18,6 +19,7 @@ function GameRoom({ lobby, players, playerName }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [gameStartTime, setGameStartTime] = useState(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [hasTrackedResult, setHasTrackedResult] = useState(false);
   
   // Attack system state (NEW - doesn't affect existing logic)
   const [activeAttackEffect, setActiveAttackEffect] = useState(null);
@@ -38,6 +40,20 @@ function GameRoom({ lobby, players, playerName }) {
       return () => clearInterval(interval);
     }
   }, [gameStartTime, lobby?.status]);
+
+  // Track wins and losses when game finishes
+  useEffect(() => {
+    if (gameFinished && !hasTrackedResult) {
+      if (gameFinished.winner === playerName) {
+        const newWins = incrementWins()
+        console.log(`🎉 Victory! Total wins: ${newWins}`)
+      } else {
+        const newLosses = incrementLosses()
+        console.log(`😢 Defeat! Total losses: ${newLosses}`)
+      }
+      setHasTrackedResult(true)
+    }
+  }, [gameFinished, playerName, hasTrackedResult]);
 
   // Attack system handlers (NEW - isolated from existing logic)
   useEffect(() => {

@@ -65,6 +65,15 @@ function Navbar() {
               Leaderboard
             </button>
           </Link>
+          <Link to="/customize">
+            <button 
+              type="button" 
+              className="nes-btn is-success text-xs px-4 py-1"
+              style={{ height: '32px' }}
+            >
+              🎨 Shiba
+            </button>
+          </Link>
           <button 
             type="button" 
             className="nes-btn is-normal text-xs px-4 py-1"

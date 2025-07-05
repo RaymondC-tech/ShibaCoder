@@ -40,6 +40,12 @@ function FrontPage() {
                 </button>
               </Link>
               
+              <Link to="/customize" className="w-full">
+                <button type="button" className="nes-btn is-success w-full">
+                  🎨 Customize Shiba
+                </button>
+              </Link>
+              
               <Link to="/about" className="w-full">
                 <button type="button" className="nes-btn w-full">
                   About
