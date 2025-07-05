@@ -1,8 +1,8 @@
 // Configuration for different environments
 const config = {
   development: {
-    wsUrl: 'ws://localhost:8000/ws',
-    apiUrl: 'http://localhost:8000'
+    wsUrl: 'wss://shibacoder-production.up.railway.app/ws',
+    apiUrl: 'https://shibacoder-production.up.railway.app'
   },
   production: {
     wsUrl: 'wss://shibacoder-production.up.railway.app/ws',
