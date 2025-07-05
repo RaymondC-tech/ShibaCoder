@@ -45,8 +45,6 @@ Backend will run on http://localhost:8000
 ### Backend
 - **FastAPI** for REST API and WebSocket support
 - **Python-SocketIO** for real-time events
-- **Docker** (optional) for code execution
-- **VM2/isolated-vm** for secure code running
 
 ## Core Features
 
@@ -55,19 +53,3 @@ Backend will run on http://localhost:8000
 - Monaco code editor with syntax highlighting
 - Test case visualization
 - Simple room-based matchmaking
-
-## Development Timeline (6 hours)
-
-1. **Hour 1**: Setup + Basic UI Components
-2. **Hour 2-3**: Game Room + Monaco Integration
-3. **Hour 4-5**: Socket.IO + Real-time Updates
-4. **Hour 6**: Polish + Demo Prep
-
-## For Hackathon Judges
-
-This project addresses Hack404's three core themes:
-- **Community**: Brings developers together through competitive coding
-- **Education**: Learn algorithms through gamified competition
-- **Innovation**: Real-time code battles with live progress tracking
-
-See `SHIBACODER_MVP.md` for detailed implementation guide.
