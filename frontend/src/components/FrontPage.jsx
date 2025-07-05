@@ -4,6 +4,7 @@ import { Browser } from 'react-kawaii'
 import CloudBackground from './CloudBackground'
 import ShibaSprite from './ShibaSprite'
 import Navbar from './Navbar'
+import './Navbar.css' // For the glow effect
 
 function FrontPage() {
   return (
@@ -30,6 +31,12 @@ function FrontPage() {
               <Link to="/game" className="w-full">
                 <button type="button" className="nes-btn is-primary w-full">
                   Enter Game Lobby
+                </button>
+              </Link>
+              
+              <Link to="/daily" className="w-full">
+                <button type="button" className="nes-btn is-warning w-full daily-glow">
+                  ✨ Daily Challenge ✨
                 </button>
               </Link>
               
