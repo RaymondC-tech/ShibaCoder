@@ -38,5 +38,31 @@ export const sounds = {
     notes.forEach((freq, i) => {
       setTimeout(() => createBeepSound(freq, 0.2), i * 150)
     })
+  },
+  // 🎵 MEGA DRAMATIC ATTACK SOUNDS FOR DEMO
+  attackLaunch: () => {
+    createBeepSound(1500, 0.1)
+    setTimeout(() => createBeepSound(1200, 0.1), 50)
+    setTimeout(() => createBeepSound(800, 0.15), 100)
+    setTimeout(() => createBeepSound(400, 0.2), 150)
+  },
+  attackReceived: () => {
+    createBeepSound(100, 0.3)
+    setTimeout(() => createBeepSound(150, 0.25), 100)
+    setTimeout(() => createBeepSound(200, 0.2), 200)
+  },
+  nukeAttack: () => {
+    // Epic descending alarm sound
+    createBeepSound(2000, 0.2)
+    setTimeout(() => createBeepSound(1800, 0.2), 100)
+    setTimeout(() => createBeepSound(1600, 0.2), 200)
+    setTimeout(() => createBeepSound(1400, 0.2), 300)
+    setTimeout(() => createBeepSound(1200, 0.2), 400)
+    setTimeout(() => createBeepSound(1000, 0.2), 500)
+    setTimeout(() => createBeepSound(800, 0.2), 600)
+    setTimeout(() => createBeepSound(600, 0.2), 700)
+    setTimeout(() => createBeepSound(400, 0.2), 800)
+    setTimeout(() => createBeepSound(200, 0.3), 900)
+    setTimeout(() => createBeepSound(100, 0.5), 1000)
   }
 }

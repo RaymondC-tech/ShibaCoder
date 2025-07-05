@@ -67,14 +67,22 @@ function AttackQuestions({ playerName, onSendAttack, gameFinished }) {
 
   const handleSendAttack = () => {
     if (availableAttacks > 0 && !isOnCooldown && !gameFinished) {
-      const attackTypes = ['flashbang', 'cursor-vanish', 'shake', 'zoom-chaos', 'code-blur']
+      // 🎯 MEGA DRAMATIC ATTACK SELECTION FOR DEMO!
+      const attackTypes = ['flashbang', 'cursor-vanish', 'shake', 'zoom-chaos', 'code-blur', 'nuke']
       const randomAttack = attackTypes[Math.floor(Math.random() * attackTypes.length)]
       
+      console.log('🔥💥 DEVASTATING ATTACK LAUNCHED:', randomAttack.toUpperCase()) // Debug log
       onSendAttack(randomAttack)
       setAvailableAttacks(availableAttacks - 1)
       setIsOnCooldown(true)
       setCooldownTime(15) // 15 second cooldown
-      sounds.buttonClick()
+      
+      // 🎵 DRAMATIC ATTACK SOUND EFFECTS
+      if (randomAttack === 'nuke') {
+        sounds.nukeAttack()
+      } else {
+        sounds.attackLaunch()
+      }
     }
   }
 
@@ -156,15 +164,29 @@ function AttackQuestions({ playerName, onSendAttack, gameFinished }) {
             <span className="text-sm font-bold ml-2">{availableAttacks}</span>
           </div>
           
-          <button
-            className={`nes-btn text-xs ${
-              availableAttacks > 0 && !isOnCooldown ? 'is-error' : 'is-disabled'
-            }`}
-            onClick={handleSendAttack}
-            disabled={availableAttacks === 0 || isOnCooldown || gameFinished}
-          >
-            {isOnCooldown ? `🔄 ${cooldownTime}s` : '💥 Attack!'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              className={`nes-btn text-xs ${
+                availableAttacks > 0 && !isOnCooldown ? 'is-error' : 'is-disabled'
+              }`}
+              onClick={handleSendAttack}
+              disabled={availableAttacks === 0 || isOnCooldown || gameFinished}
+            >
+              {isOnCooldown ? `🔄 ${cooldownTime}s` : availableAttacks > 0 ? '💥 DEVASTATE!' : '💥 No Ammo'}
+            </button>
+            
+            {/* Debug buttons for testing each attack */}
+            {process.env.NODE_ENV === 'development' && availableAttacks > 0 && (
+              <div className="flex gap-1">
+                <button className="nes-btn is-error text-xs" onClick={() => onSendAttack('nuke')}>☢️</button>
+                <button className="nes-btn is-error text-xs" onClick={() => onSendAttack('flashbang')}>⚡</button>
+                <button className="nes-btn is-error text-xs" onClick={() => onSendAttack('shake')}>🌪️</button>
+                <button className="nes-btn is-error text-xs" onClick={() => onSendAttack('zoom-chaos')}>🔍</button>
+                <button className="nes-btn is-error text-xs" onClick={() => onSendAttack('code-blur')}>🌫️</button>
+                <button className="nes-btn is-error text-xs" onClick={() => onSendAttack('cursor-vanish')}>👻</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

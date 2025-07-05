@@ -3,6 +3,7 @@ import Editor from '@monaco-editor/react';
 import { useLobby } from '../hooks/useLobby';
 import AttackQuestions from './AttackQuestions';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { sounds } from '../utils/sounds';
 import './GameRoom.css';
 
 function GameRoom({ lobby, players, playerName }) {
@@ -41,17 +42,32 @@ function GameRoom({ lobby, players, playerName }) {
   // Attack system handlers (NEW - isolated from existing logic)
   useEffect(() => {
     const handleAttackReceived = (data) => {
-      console.log('Attack received:', data);
+      console.log('💥 MEGA ATTACK RECEIVED:', data.attackType, 'from', data.attacker);
       setActiveAttackEffect(data.attackType);
       
-      // Auto-clear attack effect after duration
-      const duration = data.attackType === 'zoom-chaos' ? 3000 : 
-                      data.attackType === 'code-blur' ? 4000 : 
-                      data.attackType === 'cursor-vanish' ? 3000 :
-                      data.attackType === 'shake' ? 2000 : 500; // flashbang
+      // 🎯 MEGA DRAMATIC DURATIONS for demo impact!
+      const duration = data.attackType === 'nuke' ? 8000 :         // 💥 ULTIMATE NUKE ATTACK
+                      data.attackType === 'code-blur' ? 6000 : 
+                      data.attackType === 'zoom-chaos' ? 5000 : 
+                      data.attackType === 'cursor-vanish' ? 5000 :
+                      data.attackType === 'shake' ? 4000 : 2000; // flashbang
+      
+      console.log('🎯 MEGA ATTACK effect active for', duration, 'ms');
+      
+      // 🎵 DRAMATIC INCOMING ATTACK SOUND
+      if (data.attackType === 'nuke') {
+        sounds.nukeAttack()
+      } else {
+        sounds.attackReceived()
+      }
+      
+      // Add screen-wide attack effect
+      document.querySelector('.game-room')?.classList.add('under-attack');
       
       setTimeout(() => {
+        console.log('✅ MEGA ATTACK effect cleared');
         setActiveAttackEffect(null);
+        document.querySelector('.game-room')?.classList.remove('under-attack');
       }, duration);
     };
 
@@ -222,13 +238,14 @@ function GameRoom({ lobby, players, playerName }) {
 
         <div className="editor-section">
           <div className={`editor-container nes-container ${
+            activeAttackEffect === 'nuke' ? 'attack-nuke' :
             activeAttackEffect === 'flashbang' ? 'attack-flashbang' :
             activeAttackEffect === 'shake' ? 'attack-shake' :
             activeAttackEffect === 'zoom-chaos' ? 'attack-zoom-chaos' :
             activeAttackEffect === 'code-blur' ? 'attack-code-blur' :
             activeAttackEffect === 'cursor-vanish' ? 'attack-cursor-vanish' :
             ''
-          }`}>
+          }`} data-attack={activeAttackEffect || 'none'}>
             <Editor
               height="500px"
               language="python"
