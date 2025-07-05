@@ -80,7 +80,7 @@ function GameLobby() {
   return (
     <div className="min-h-screen bg-shiba-bg flex flex-col relative">
       <CloudBackground />
-      <ShibaSprite />
+      <ShibaSprite behavior="wander" />
       {gameState !== 'playing' && <Navbar />}
       
       <div className="flex-1 relative z-10">

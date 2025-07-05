@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 
-const ShibaSprite = () => {
-  const [position, setPosition] = useState({ x: 0, y: 0 })
+const ShibaSprite = ({ behavior = 'follow' }) => {
+  const [position, setPosition] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 })
+  const [wanderTarget, setWanderTarget] = useState({ x: 0, y: 0 })
   const [isMoving, setIsMoving] = useState(false)
   const [currentAnimation, setCurrentAnimation] = useState('idle_front')
   const [currentFrame, setCurrentFrame] = useState(0)
@@ -22,12 +23,14 @@ const ShibaSprite = () => {
     walk_front: { row: 2, frames: 4, speed: 200 },
     walk_right: { row: 3, frames: 4, speed: 200 },
     walk_up: { row: 5, frames: 4, speed: 200 },
-    sit_front: { row: 6, frames: 4, speed: 400 },
-    sit_right: { row: 7, frames: 4, speed: 400 }
+    sit_front: { row: 6, frames: 4, speed: 150 },
+    sit_right: { row: 7, frames: 4, speed: 150 }
   }
 
-  // Track mouse position
+  // Track mouse position (only for follow behavior)
   useEffect(() => {
+    if (behavior !== 'follow') return
+
     const handleMouseMove = (e) => {
       setCursorPosition({ x: e.clientX, y: e.clientY })
       lastMoveTimeRef.current = Date.now()
@@ -41,7 +44,7 @@ const ShibaSprite = () => {
       idleTimeoutRef.current = setTimeout(() => {
         setIsIdle(true)
         setIsSitting(true)
-      }, 2000) // 2 seconds of no movement
+      }, 300) // 300ms of no movement
     }
 
     window.addEventListener('mousemove', handleMouseMove)
@@ -51,20 +54,49 @@ const ShibaSprite = () => {
         clearTimeout(idleTimeoutRef.current)
       }
     }
-  }, [])
+  }, [behavior])
+
+  // Generate random wander targets (for wander behavior)
+  useEffect(() => {
+    if (behavior !== 'wander') return
+
+    const generateWanderTarget = () => {
+      const margin = 100
+      const newTarget = {
+        x: Math.random() * (window.innerWidth - 2 * margin) + margin,
+        y: Math.random() * (window.innerHeight - 2 * margin) + margin
+      }
+      setWanderTarget(newTarget)
+    }
+
+    // Generate initial target
+    generateWanderTarget()
+
+    // Generate new target every 3-8 seconds
+    const interval = setInterval(() => {
+      generateWanderTarget()
+    }, Math.random() * 5000 + 3000)
+
+    return () => clearInterval(interval)
+  }, [behavior])
 
   // Movement logic
   useEffect(() => {
-    const moveTowardsCursor = () => {
-      if (isSitting) return
+    const moveShiba = () => {
+      if (isSitting && behavior === 'follow') return
 
-      const dx = cursorPosition.x - position.x
-      const dy = cursorPosition.y - position.y
+      let target = behavior === 'follow' ? cursorPosition : wanderTarget
+      const dx = target.x - position.x
+      const dy = target.y - position.y
       const distance = Math.sqrt(dx * dx + dy * dy)
 
-      if (distance > 50) { // Dead zone around cursor
+      const deadZone = behavior === 'follow' ? 50 : 30
+      const speed = behavior === 'follow' ? 8 : 2
+
+      if (distance > deadZone) {
         setIsMoving(true)
         setIsIdle(false)
+        setIsSitting(false)
         
         // Determine direction and animation
         const angle = Math.atan2(dy, dx)
@@ -94,8 +126,7 @@ const ShibaSprite = () => {
         setDirection(newDirection)
         setCurrentAnimation(newAnimation)
         
-        // Move towards cursor
-        const speed = 6
+        // Move towards target
         const moveX = (dx / distance) * speed
         const moveY = (dy / distance) * speed
         
@@ -105,6 +136,13 @@ const ShibaSprite = () => {
         }))
       } else {
         setIsMoving(false)
+        
+        // For wander behavior, sit sometimes when reaching target
+        if (behavior === 'wander' && Math.random() < 0.6) {
+          setIsSitting(true)
+          setTimeout(() => setIsSitting(false), Math.random() * 6000 + 4000) // 4-10 seconds
+        }
+        
         // Set idle animation based on current direction
         if (direction === 'right' || direction === 'left') {
           setCurrentAnimation('idle_right')
@@ -114,9 +152,9 @@ const ShibaSprite = () => {
       }
     }
 
-    const interval = setInterval(moveTowardsCursor, 16) // ~60fps
+    const interval = setInterval(moveShiba, 16) // ~60fps
     return () => clearInterval(interval)
-  }, [cursorPosition, position, direction, isSitting])
+  }, [cursorPosition, wanderTarget, position, direction, isSitting, behavior])
 
   // Handle sitting animation
   useEffect(() => {
@@ -186,7 +224,7 @@ const ShibaSprite = () => {
     backgroundPosition: `-${currentFrame * 100}px -${animations[currentAnimation]?.row * 100}px`,
     transform: direction === 'left' ? 'scaleX(-1)' : 'scaleX(1)',
     pointerEvents: 'none',
-    zIndex: 1000,
+    zIndex: 5,
     imageRendering: 'pixelated',
     transition: 'transform 0.1s ease'
   }

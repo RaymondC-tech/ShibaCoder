@@ -8,7 +8,7 @@ function About() {
   return (
     <div className="min-h-screen bg-shiba-bg flex flex-col relative">
       <CloudBackground />
-      <ShibaSprite />
+      <ShibaSprite behavior="wander" />
       <Navbar />
       
       <div className="flex-1 flex items-center justify-center relative z-10 p-4">

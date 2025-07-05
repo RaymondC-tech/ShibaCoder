@@ -8,7 +8,7 @@ function FrontPage() {
   return (
     <div className="min-h-screen bg-shiba-bg flex flex-col relative">
       <CloudBackground />
-      <ShibaSprite />
+      <ShibaSprite behavior="follow" />
       
       <div className="flex-1 flex items-center justify-center relative z-10 p-4">
         <div className="nes-container with-title is-centered bg-white max-w-md w-full">
