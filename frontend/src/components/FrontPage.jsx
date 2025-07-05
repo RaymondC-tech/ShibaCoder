@@ -7,7 +7,7 @@ import Navbar from './Navbar'
 
 function FrontPage() {
   return (
-    <div className="min-h-screen bg-shiba-bg flex flex-col relative">
+    <div className="min-h-screen flex flex-col relative" style={{ backgroundColor: '#EBC697' }}>
       <CloudBackground />
       <ShibaSprite behavior="follow" />
       <Navbar />

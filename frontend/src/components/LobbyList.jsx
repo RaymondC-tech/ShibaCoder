@@ -261,8 +261,8 @@ function LobbyList({ onCreateLobby, onJoinLobby }) {
         {/* Name Modal */}
         {showNameModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="nes-container is-dark bg-white max-w-md w-full">
-              <h3 className="text-sm font-bold mb-4">Enter Your Name</h3>
+            <div className="nes-container bg-white max-w-md w-full">
+              <h3 className="text-sm font-bold mb-4 text-gray-900">Enter Your Name</h3>
               <p className="text-xs text-gray-600 mb-4">
                 Please enter your name to join the lobby.
               </p>
@@ -306,8 +306,8 @@ function LobbyList({ onCreateLobby, onJoinLobby }) {
         {/* Password Modal */}
         {showPasswordModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="nes-container is-dark bg-white max-w-md w-full">
-              <h3 className="text-sm font-bold mb-4">Enter PIN</h3>
+            <div className="nes-container bg-white max-w-md w-full">
+              <h3 className="text-sm font-bold mb-4 text-gray-900">Enter PIN</h3>
               <p className="text-xs text-gray-600 mb-4">
                 This is a private lobby. Please enter the 4-digit PIN to join.
               </p>

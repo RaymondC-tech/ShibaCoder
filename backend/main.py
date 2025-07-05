@@ -612,10 +612,7 @@ async def handle_player_ready(client_id: str, data: dict):
         
         lobby = lobbies[lobby_id]
         
-        # Check if lobby has enough players
-        if len(lobby["players"]) < 2:
-            await send_to_client(client_id, "error", {"message": "Need 2 players to start game"})
-            return
+        # No need to check player count - allow ready even when alone
         
         # Find and update player ready state
         player_found = False
@@ -646,11 +643,26 @@ async def handle_player_ready(client_id: str, data: dict):
         all_ready = all(player["ready"] for player in lobby["players"])
         
         if all_ready and len(lobby["players"]) == lobby["maxPlayers"]:
+            # Start countdown
+            print(f"All players ready in lobby {lobby_id} - starting countdown!")
+            
+            # Broadcast countdown start
+            await broadcast_to_lobby(lobby_id, "countdown_start", {
+                "countdown": 3
+            })
+            
+            # Wait 3 seconds with countdown updates
+            for i in range(3, 0, -1):
+                await broadcast_to_lobby(lobby_id, "countdown_update", {
+                    "countdown": i
+                })
+                await asyncio.sleep(1)
+            
             # Start the game!
             lobby["status"] = "playing"
             lobby["started_at"] = time.time()
             
-            print(f"Game started in lobby {lobby_id} - all players ready!")
+            print(f"Game started in lobby {lobby_id}!")
             
             # Add the hardcoded Two Sum problem
             game_problem = {

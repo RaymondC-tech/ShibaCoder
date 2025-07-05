@@ -1,20 +1,57 @@
-import { Browser } from 'react-kawaii'
+import { useState, useEffect } from 'react'
 import { sounds } from '../utils/sounds'
 import { useLobby } from '../hooks/useLobby.js'
+import { useWebSocket } from '../hooks/useWebSocket.jsx'
 
 function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobby, onGameStart }) {
+  if (!lobby) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-68px)] p-4">
+        <div className="nes-container">
+          <p>Loading lobby...</p>
+        </div>
+      </div>
+    );
+  }
   const { playerReady } = useLobby()
-  
-  // Debug logging
-  console.log('WaitingRoom Debug:', { lobby, players, playerName, connected })
+  const { on, off } = useWebSocket()
+  const [countdown, setCountdown] = useState(null)
   
   const currentPlayer = players.find(p => p.name === playerName)
   const opponent = players.find(p => p.name !== playerName)
   const isFull = players.length === lobby.maxPlayers
   const allReady = players.length === 2 && players.every(p => p.ready)
   
-  // More debug logging
-  console.log('Player matching:', { currentPlayer, opponent, isFull, allReady })
+  // Listen for countdown events
+  useEffect(() => {
+    const handleCountdownStart = () => {
+      setCountdown(3)
+    }
+    
+    const handleCountdownUpdate = (data) => {
+      setCountdown(data.countdown)
+    }
+    
+    on('countdown_start', handleCountdownStart)
+    on('countdown_update', handleCountdownUpdate)
+    
+    return () => {
+      off('countdown_start', handleCountdownStart)
+      off('countdown_update', handleCountdownUpdate)
+    }
+  }, [on, off])
+  
+  // Debug logging
+  console.log('WaitingRoom state:', {
+    playerName,
+    currentPlayer,
+    opponent,
+    isFull,
+    allReady,
+    players,
+    connected,
+    countdown
+  })
 
   const handleLeaveLobby = () => {
     sounds.buttonClick()
@@ -54,10 +91,6 @@ function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobb
           {/* Lobby Info */}
           <div className="text-center">
             <h2 className="text-lg font-bold text-amber-900 mb-2">{lobby.name}</h2>
-            <div className="nes-badge is-splited">
-              <span className="is-dark">Lobby ID</span>
-              <span className="is-warning">{lobby.id.replace('lobby_', '')}</span>
-            </div>
             {lobby.type === 'private' && (
               <div className="nes-badge mt-2">
                 <span className="is-warning text-xs">Private</span>
@@ -77,29 +110,35 @@ function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobb
                 <div className="text-center">
                   {currentPlayer ? (
                     <>
-                      <div className="nes-avatar is-rounded mb-2">
-                        <Browser 
-                          size={60} 
-                          mood={currentPlayer.ready ? "excited" : "happy"} 
-                          color={currentPlayer.ready ? "#22C55E" : "#92C5F7"} 
+                      <div className="mb-2">
+                        <img 
+                          src="/shibaface.svg" 
+                          alt="Player" 
+                          className="w-16 h-16 mx-auto"
+                          style={{ imageRendering: 'pixelated' }}
                         />
                       </div>
                       <p className="text-sm font-bold text-blue-900">{currentPlayer.name}</p>
                       <p className="text-xs text-blue-600">You</p>
                       {currentPlayer.ready ? (
-                        <div className="nes-badge mt-2">
-                          <span className="is-success text-xs">Ready!</span>
+                        <div className="mt-2">
+                          <span className="nes-text is-success text-xs">✓ Ready!</span>
                         </div>
                       ) : (
-                        <div className="nes-badge mt-2">
-                          <span className="is-warning text-xs">Not Ready</span>
+                        <div className="mt-2">
+                          <span className="nes-text is-warning text-xs">Not Ready</span>
                         </div>
                       )}
                     </>
                   ) : (
                     <>
-                      <div className="nes-avatar is-rounded mb-2">
-                        <Browser size={60} mood="sad" color="#D1D5DB" />
+                      <div className="mb-2">
+                        <img 
+                          src="/shibaface.svg" 
+                          alt="Empty" 
+                          className="w-16 h-16 mx-auto opacity-30"
+                          style={{ imageRendering: 'pixelated' }}
+                        />
                       </div>
                       <p className="text-xs text-gray-500">Waiting...</p>
                     </>
@@ -112,29 +151,35 @@ function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobb
                 <div className="text-center">
                   {opponent ? (
                     <>
-                      <div className="nes-avatar is-rounded mb-2">
-                        <Browser 
-                          size={60} 
-                          mood={opponent.ready ? "excited" : "happy"} 
-                          color={opponent.ready ? "#22C55E" : "#FDB7DA"} 
+                      <div className="mb-2">
+                        <img 
+                          src="/shibaface.svg" 
+                          alt="Opponent" 
+                          className="w-16 h-16 mx-auto"
+                          style={{ imageRendering: 'pixelated' }}
                         />
                       </div>
                       <p className="text-sm font-bold text-pink-900">{opponent.name}</p>
                       <p className="text-xs text-pink-600">Opponent</p>
                       {opponent.ready ? (
-                        <div className="nes-badge mt-2">
-                          <span className="is-success text-xs">Ready!</span>
+                        <div className="mt-2">
+                          <span className="nes-text is-success text-xs">✓ Ready!</span>
                         </div>
                       ) : (
-                        <div className="nes-badge mt-2">
-                          <span className="is-warning text-xs">Not Ready</span>
+                        <div className="mt-2">
+                          <span className="nes-text is-warning text-xs">Not Ready</span>
                         </div>
                       )}
                     </>
                   ) : (
                     <>
-                      <div className="nes-avatar is-rounded mb-2">
-                        <Browser size={60} mood="sad" color="#D1D5DB" />
+                      <div className="mb-2">
+                        <img 
+                          src="/shibaface.svg" 
+                          alt="Empty" 
+                          className="w-16 h-16 mx-auto opacity-30"
+                          style={{ imageRendering: 'pixelated' }}
+                        />
                       </div>
                       <p className="text-xs text-gray-500">Waiting...</p>
                     </>
@@ -144,81 +189,53 @@ function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobb
             </div>
           </div>
 
-          {/* Status Message */}
-          <div className="text-center">
-            {!isFull ? (
-              <>
-                <Browser size={120} mood="shocked" color="#FDB7DA" />
-                <p className="text-sm animate-pulse mt-4">Waiting for opponent...</p>
-                <p className="text-xs text-gray-600 mt-2">
-                  {lobby.type === 'private' 
-                    ? 'Share the lobby ID and PIN with your friend!' 
-                    : 'Share the lobby ID with your friend!'
-                  }
-                </p>
-              </>
-            ) : allReady ? (
-              <>
-                <Browser size={120} mood="excited" color="#22C55E" />
-                <p className="text-sm font-bold text-green-600 mt-4">🚀 Starting game...</p>
-                <p className="text-xs text-gray-600 mt-2">Both players are ready!</p>
-              </>
-            ) : (
-              <>
-                <Browser size={120} mood="happy" color="#FDB7DA" />
-                <p className="text-sm font-bold mt-4">Waiting for players to ready up...</p>
-                <p className="text-xs text-gray-600 mt-2">Click "Ready" when you're prepared to battle!</p>
-              </>
-            )}
-          </div>
+          {/* Countdown Display */}
+          {countdown && (
+            <div className="text-center">
+              <h2 className="text-4xl font-bold text-green-600 animate-pulse">
+                {countdown}
+              </h2>
+              <p className="text-sm text-gray-600 mt-2">Game starting...</p>
+            </div>
+          )}
+          
+          {/* Status Message - Simple and Clean */}
+          {allReady && !countdown && (
+            <div className="text-center">
+              <p className="text-sm font-bold text-green-600 animate-pulse">🚀 Starting game...</p>
+              <p className="text-xs text-gray-600 mt-2">Both players are ready!</p>
+            </div>
+          )}
 
-          {/* Action Buttons */}
-          <div className="flex gap-4 mt-6">
+          {/* Ready Button - Show when player is not ready */}
+          {currentPlayer && !currentPlayer.ready && (
             <button
               type="button"
-              className="nes-btn text-xs"
+              className="nes-btn is-success"
+              onClick={handlePlayerReady}
+              disabled={!connected}
+            >
+              Ready to Battle!
+            </button>
+          )}
+
+          {/* Waiting message when player is ready */}
+          {currentPlayer?.ready && !allReady && (
+            <p className="text-sm text-gray-600 animate-pulse">
+              {isFull ? 'Waiting for opponent to ready up...' : 'You are ready! Waiting for opponent to join...'}
+            </p>
+          )}
+
+          {/* Leave Lobby Button */}
+          <div className="mt-4">
+            <button
+              type="button"
+              className="nes-btn is-error text-xs"
               onClick={handleLeaveLobby}
               disabled={!connected}
             >
               Leave Lobby
             </button>
-            
-            {/* Debug info */}
-            <div className="text-xs text-gray-500 mb-2">
-              Debug: currentPlayer={currentPlayer?.name || 'undefined'}, isFull={isFull.toString()}, ready={currentPlayer?.ready?.toString() || 'undefined'}
-            </div>
-            
-            {/* Ready button - show for any player when lobby is full */}
-            {isFull && (
-              <>
-                {!currentPlayer?.ready ? (
-                  <button
-                    type="button"
-                    className="nes-btn is-success text-xs"
-                    onClick={handlePlayerReady}
-                    disabled={!connected}
-                  >
-                    Ready Up!
-                  </button>
-                ) : !allReady ? (
-                  <button
-                    type="button"
-                    className="nes-btn is-disabled text-xs"
-                    disabled
-                  >
-                    Waiting for opponent...
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="nes-btn is-disabled text-xs"
-                    disabled
-                  >
-                    Game Starting...
-                  </button>
-                )}
-              </>
-            )}
           </div>
 
           {/* Instructions */}

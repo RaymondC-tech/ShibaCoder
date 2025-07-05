@@ -1,247 +1,176 @@
-import { useState, useEffect } from 'react'
-import Editor from '@monaco-editor/react'
-import { Cat, Ghost } from 'react-kawaii'
-import { sounds } from '../utils/sounds'
-import { useLobby } from '../hooks/useLobby.js'
+import React, { useState, useEffect } from 'react';
+import Editor from '@monaco-editor/react';
+import { useLobby } from '../hooks/useLobby';
+import './GameRoom.css';
 
 function GameRoom({ lobby, players, playerName }) {
-  const [code, setCode] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { testResults, gameFinished, submitCode, leaveLobby } = useLobby();
+  const [code, setCode] = useState(`def two_sum(nums, target):
+    # Write your solution here
+    pass`);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gameStartTime] = useState(Date.now());
   
-  const { 
-    submitCode, 
-    testResults, 
-    gameFinished, 
-    connected, 
-    error,
-    clearTestResults,
-    clearGameFinished 
-  } = useLobby()
+  // Debug logging
+  console.log('GameRoom state:', {
+    lobby,
+    players,
+    playerName,
+    status: lobby?.status
+  });
 
-  // Initialize code with problem template
-  useEffect(() => {
-    if (lobby?.problem?.template && !code) {
-      setCode(lobby.problem.template)
-    }
-  }, [lobby?.problem?.template, code])
-
-  // Get player progress data
-  const currentPlayer = players.find(p => p.name === playerName)
-  const opponent = players.find(p => p.name !== playerName)
+  // Calculate progress for both players
+  const currentPlayer = players.find(p => p.name === playerName);
+  const opponent = players.find(p => p.name !== playerName);
   
-  const playerProgress = currentPlayer?.tests_passed || 0
-  const opponentProgress = opponent?.tests_passed || 0
-  const totalTests = currentPlayer?.total_tests || 5
+  const playerProgress = currentPlayer?.tests_passed ? (currentPlayer.tests_passed / 5) * 100 : 0;
+  const opponentProgress = opponent?.tests_passed ? (opponent.tests_passed / 5) * 100 : 0;
 
-  // Handle test results
-  useEffect(() => {
-    if (testResults) {
-      setIsSubmitting(false)
-      if (testResults.completed) {
-        sounds.gameWin()
-      } else if (testResults.passed > 0) {
-        sounds.testPass()
-      }
-      
-      // Clear test results after showing them
-      setTimeout(() => {
-        clearTestResults()
-      }, 3000)
-    }
-  }, [testResults, clearTestResults])
-
-  // Handle game finished
-  useEffect(() => {
-    if (gameFinished) {
-      if (gameFinished.winner === playerName) {
-        sounds.gameWin()
-      }
-    }
-  }, [gameFinished, playerName])
-
-  const handleCodeChange = (value) => {
-    setCode(value)
-  }
-
-  const handleSubmit = () => {
-    if (!code.trim()) {
-      return
-    }
+  const handleSubmit = async () => {
+    if (!code.trim() || isSubmitting) return;
     
-    sounds.buttonClick()
-    setIsSubmitting(true)
-    submitCode(code, 'python')
+    setIsSubmitting(true);
+    try {
+      await submitCode(code);
+    } catch (error) {
+      console.error('Failed to submit code:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const formatTime = () => {
+    const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  if (!lobby || lobby.status !== 'playing') {
+    return (
+      <div className="game-room">
+        <div className="nes-container">
+          <h2>Loading game...</h2>
+          <p className="text-sm text-gray-600 mt-2">
+            {!lobby ? 'Connecting to game...' : 'Waiting for game to start...'}
+          </p>
+          <button className="nes-btn is-primary mt-4" onClick={() => window.location.href = '/'}>
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
   }
 
-  const playerMood = playerProgress === totalTests ? 'blissful' : playerProgress > 0 ? 'happy' : 'excited'
-  const opponentMood = opponentProgress === totalTests ? 'blissful' : opponentProgress > 0 ? 'happy' : 'excited'
-  
-  // Use real problem data from lobby
-  const problem = lobby?.problem || {
-    title: "Loading...",
-    description: "Loading problem...",
-    examples: []
-  }
+  const problem = lobby.problem || {
+    title: "Two Sum",
+    description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+    examples: [
+      {
+        input: "nums = [2,7,11,15], target = 9",
+        output: "[0,1]",
+        explanation: "Because nums[0] + nums[1] == 9, we return [0, 1]."
+      }
+    ]
+  };
 
   return (
-    <div className="h-screen flex flex-col bg-shiba-bg">
-      <header className="nes-container is-dark p-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-xl flex items-center gap-2">
-            <i className="nes-icon trophy is-small mr-2"></i>
-            ShibaCoder
-          </h1>
-          <div className="nes-badge">
-            <span className="is-warning text-xs">Lobby: {lobby?.name || 'Unknown'}</span>
+    <div className="game-room">
+      <div className="game-header">
+        <div className="timer-section">
+          <span className="timer">⏱️ {formatTime()}</span>
+        </div>
+        <div className="players-section">
+          <div className="player-status">
+            <img 
+              src="/shibaface.svg" 
+              alt="Player Shiba" 
+              className="shiba-avatar player-shiba"
+            />
+            <span>{currentPlayer?.name || 'You'}</span>
+            <div className="progress-bar">
+              <div className="progress-fill player" style={{ width: `${playerProgress}%` }}></div>
+            </div>
+          </div>
+          <div className="vs">VS</div>
+          <div className="player-status">
+            <img 
+              src="/shibaface.svg" 
+              alt="Opponent Shiba" 
+              className="shiba-avatar opponent-shiba"
+            />
+            <span>{opponent?.name || 'Waiting...'}</span>
+            <div className="progress-bar">
+              <div className="progress-fill opponent" style={{ width: `${opponentProgress}%` }}></div>
+            </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        <div className="w-1/3 p-4 bg-white border-r-4 border-black overflow-y-auto">
-          <div className="nes-container with-title is-rounded mb-4">
-            <p className="title text-xs">{problem.title}</p>
-            <p className="text-xs leading-relaxed">{problem.description}</p>
+      {gameFinished && (
+        <div className="winner-banner nes-container is-centered">
+          <h2>🎉 {gameFinished.winner === playerName ? 'You Won!' : `${gameFinished.winner} Won!`} 🎉</h2>
+          <button className="nes-btn is-success" onClick={leaveLobby}>
+            Back to Lobby
+          </button>
+        </div>
+      )}
+
+      <div className="game-content">
+        <div className="problem-section nes-container with-title">
+          <p className="title">{problem.title}</p>
+          <div className="problem-description">
+            <p>{problem.description}</p>
+            
+            <h4>Example:</h4>
+            {problem.examples.map((example, idx) => (
+              <div key={idx} className="example">
+                <p><strong>Input:</strong> {example.input}</p>
+                <p><strong>Output:</strong> {example.output}</p>
+                {example.explanation && <p><strong>Explanation:</strong> {example.explanation}</p>}
+              </div>
+            ))}
           </div>
-          
-          {problem.examples && problem.examples.length > 0 && (
-            <div className="nes-container is-rounded mb-4">
-              <p className="text-xs font-bold mb-2">Examples:</p>
-              {problem.examples.map((example, index) => (
-                <div key={index} className="mb-2">
-                  <pre className="text-xs bg-gray-100 p-2 rounded overflow-x-auto">
-                    {example.input}
-                    {"\n"}
-                    {example.output}
-                    {example.explanation && "\n" + example.explanation}
-                  </pre>
-                </div>
+
+          {testResults && (
+            <div className="test-results nes-container is-rounded">
+              <h4>Test Results</h4>
+              <p>✅ Passed: {testResults.passed}/{testResults.total}</p>
+              {testResults.errors?.map((error, idx) => (
+                <p key={idx} className="error">❌ {error}</p>
               ))}
             </div>
           )}
-          
-          <div className="nes-container with-title is-rounded">
-            <p className="title text-xs">Battle Status</p>
-            
-            <div className="space-y-4">
-              {/* Player Progress */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Cat size={40} mood={playerMood} color="#B6F9C9" />
-                    <span className="text-xs">{playerName} (You)</span>
-                  </div>
-                  <span className="text-xs">{playerProgress}/{totalTests}</span>
-                </div>
-                <progress 
-                  className="nes-progress is-success" 
-                  value={playerProgress} 
-                  max={totalTests}
-                ></progress>
-              </div>
-
-              {/* Opponent Progress */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Ghost size={40} mood={opponentMood} color="#FFB3E6" />
-                    <span className="text-xs">{opponent?.name || 'Opponent'}</span>
-                  </div>
-                  <span className="text-xs">{opponentProgress}/{totalTests}</span>
-                </div>
-                <progress 
-                  className="nes-progress is-error" 
-                  value={opponentProgress} 
-                  max={totalTests}
-                ></progress>
-              </div>
-            </div>
-          </div>
-
-          {/* Test Results Display */}
-          {testResults && (
-            <div className={`nes-container ${testResults.completed ? 'is-success' : testResults.passed > 0 ? 'is-warning' : 'is-error'} mt-4`}>
-              <p className="text-xs font-bold mb-2">
-                {testResults.completed ? '🎉 All Tests Passed!' : `✅ ${testResults.passed}/${testResults.total} Tests Passed`}
-              </p>
-              <p className="text-xs">Runtime: {testResults.runtime}ms</p>
-              {testResults.errors && testResults.errors.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-xs font-bold">Errors:</p>
-                  {testResults.errors.map((error, index) => (
-                    <p key={index} className="text-xs text-red-600">• {error}</p>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Game Finished Display */}
-          {gameFinished && (
-            <div className={`nes-container ${gameFinished.winner === playerName ? 'is-success' : 'is-error'} mt-4`}>
-              <p className="text-xs font-bold mb-2">
-                {gameFinished.winner === playerName ? '🏆 You Won!' : `😔 ${gameFinished.winner} Won!`}
-              </p>
-              <p className="text-xs">Game Duration: {Math.round(gameFinished.game_duration)}s</p>
-            </div>
-          )}
         </div>
 
-        <div className="flex-1 flex flex-col bg-gray-900">
-          <div className="flex-1 border-4 border-black">
+        <div className="editor-section">
+          <div className="editor-container nes-container">
             <Editor
-              height="100%"
-              defaultLanguage="python"
-              value={code}
-              onChange={handleCodeChange}
+              height="500px"
+              language="python"
               theme="vs-dark"
+              value={code}
+              onChange={setCode}
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,
-                fontFamily: "'Courier New', monospace",
-                lineHeight: 20,
-                padding: { top: 16 }
+                wordWrap: 'on',
+                automaticLayout: true,
               }}
             />
           </div>
           
-          <div className="p-4 bg-gray-800 border-t-4 border-black">
-            {/* Connection/Error Status */}
-            {!connected && (
-              <div className="nes-container is-error mb-4">
-                <p className="text-xs">⚠️ Disconnected from server</p>
-              </div>
-            )}
-            
-            {error && (
-              <div className="nes-container is-error mb-4">
-                <p className="text-xs">❌ {error}</p>
-              </div>
-            )}
-
-            {gameFinished ? (
-              <button
-                type="button"
-                className="nes-btn is-disabled w-full"
-                disabled
-              >
-                Game Finished
-              </button>
-            ) : (
-              <button
-                type="button"
-                className={`nes-btn ${isSubmitting || !connected ? 'is-disabled' : 'is-success'} w-full`}
-                onClick={handleSubmit}
-                disabled={isSubmitting || !connected || !code.trim()}
-              >
-                {isSubmitting ? 'Running Tests...' : 'Submit Solution'}
-              </button>
-            )}
-          </div>
+          <button 
+            className={`nes-btn ${isSubmitting ? 'is-disabled' : 'is-primary'} submit-btn`}
+            onClick={handleSubmit}
+            disabled={isSubmitting || gameFinished}
+          >
+            {isSubmitting ? 'Running Tests...' : 'Submit Solution'}
+          </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default GameRoom
+export default GameRoom;

@@ -303,3 +303,5 @@ export const useLobby = () => {
     clearGameFinished: () => setGameFinished(null),
   }
 }
+
+export default useLobby

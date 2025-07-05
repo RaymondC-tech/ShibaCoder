@@ -1,0 +1,227 @@
+.game-room {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+/* Game Header */
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.timer-section {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.players-section {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.player-status {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.player-status span {
+  font-weight: bold;
+  min-width: 100px;
+}
+
+/* Shiba Inu avatars */
+.shiba-avatar {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  border: 2px solid #333;
+  border-radius: 8px;
+  padding: 4px;
+  background: white;
+}
+
+.player-shiba {
+  transform: scaleX(-1); /* Face the opponent */
+  border-color: #4ade80;
+}
+
+.opponent-shiba {
+  border-color: #f87171;
+}
+
+.vs {
+  font-size: 20px;
+  font-weight: bold;
+  color: #666;
+}
+
+/* Progress Bars */
+.progress-bar {
+  width: 150px;
+  height: 20px;
+  background: #e0e0e0;
+  border: 2px solid #333;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+.progress-fill.player {
+  background: #4ade80;
+}
+
+.progress-fill.opponent {
+  background: #f87171;
+}
+
+/* Winner Banner */
+.winner-banner {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 30px;
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  animation: celebration 1s ease-in-out;
+}
+
+@keyframes celebration {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.winner-banner h2 {
+  margin-bottom: 20px;
+  font-size: 32px;
+}
+
+/* Game Content */
+.game-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  height: calc(100vh - 200px);
+}
+
+/* Problem Section */
+.problem-section {
+  overflow-y: auto;
+  height: 100%;
+}
+
+.problem-description {
+  margin-bottom: 20px;
+}
+
+.problem-description h4 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.example {
+  background: #f8f8f8;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.example p {
+  margin: 5px 0;
+}
+
+/* Test Results */
+.test-results {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f0f9ff;
+}
+
+.test-results h4 {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.test-results .error {
+  color: #ef4444;
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+/* Editor Section */
+.editor-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  height: 100%;
+}
+
+.editor-container {
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
+}
+
+.editor-container > div {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .game-content {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  
+  .editor-section {
+    height: 600px;
+  }
+  
+  .players-section {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .vs {
+    display: none;
+  }
+}
+
+/* NES.css overrides for better integration */
+.nes-container {
+  background: white;
+  margin-bottom: 0;
+}
+
+.nes-container.with-title > .title {
+  background-color: white;
+}
+
+/* Loading state */
+.nes-btn.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -31,6 +31,12 @@ function GameLobby() {
 
   // Watch for lobby state changes to update game state
   useEffect(() => {
+    console.log('App: Lobby state changed:', {
+      currentLobby,
+      status: currentLobby?.status,
+      gameState
+    });
+    
     if (currentLobby) {
       // When we join/create a lobby, go to waiting room
       if (currentLobby.status === 'waiting') {
@@ -42,6 +48,7 @@ function GameLobby() {
       }
       // When game starts, go to playing state
       else if (currentLobby.status === 'playing') {
+        console.log('App: Setting game state to playing');
         setGameState('playing')
       }
     } else {
@@ -101,7 +108,7 @@ function GameLobby() {
           </>
         )}
         
-        {gameState === 'waiting' && currentLobby && (
+        {gameState === 'waiting' && (
           <WaitingRoom 
             lobby={currentLobby}
             players={players}
@@ -113,11 +120,11 @@ function GameLobby() {
           />
         )}
         
-        {gameState === 'playing' && currentLobby && (
-          <GameRoom 
+        {gameState === 'playing' && (
+          <GameRoom
             lobby={currentLobby}
             players={players}
-            playerName={playerName}
+            playerName={currentPlayerName || playerName}
           />
         )}
       </div>

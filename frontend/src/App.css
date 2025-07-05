@@ -1,0 +1,12 @@
+/* Ensure the app has a background color */
+#root {
+  min-height: 100vh;
+  background-color: #EBC697; /* Shiba background color */
+}
+
+/* Fallback styles in case Tailwind isn't working */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #EBC697;
+}
