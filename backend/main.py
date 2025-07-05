@@ -25,9 +25,10 @@ PYTHON_LANGUAGE_ID = 71
 app = FastAPI(title="ShibaCoder API", version="1.0.0")
 
 # Configure CORS for REST endpoints
+# Allow all origins for easy deployment and testing
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["*"],  # Allow all origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -821,4 +822,5 @@ async def handle_submit_code(client_id: str, data: dict):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
