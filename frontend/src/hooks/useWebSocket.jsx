@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import config from '../config.js'
 
+
 const WebSocketContext = createContext()
 
 export const useWebSocket = () => {
@@ -21,6 +22,7 @@ export const WebSocketProvider = ({ children }) => {
     // Create WebSocket connection using config
     console.log('Connecting to WebSocket:', config.wsUrl)
     const ws = new WebSocket(config.wsUrl)
+
 
     // Connection event handlers
     ws.onopen = () => {
