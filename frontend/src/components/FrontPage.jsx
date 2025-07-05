@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Browser } from 'react-kawaii'
 import CloudBackground from './CloudBackground'
+import ShibaSprite from './ShibaSprite'
 
 function FrontPage() {
   return (
     <div className="min-h-screen bg-shiba-bg flex flex-col relative">
       <CloudBackground />
+      <ShibaSprite />
       
       <div className="flex-1 flex items-center justify-center relative z-10 p-4">
         <div className="nes-container with-title is-centered bg-white max-w-md w-full">

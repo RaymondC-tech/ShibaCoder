@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom'
 import { Browser } from 'react-kawaii'
 import CloudBackground from './CloudBackground'
+import ShibaSprite from './ShibaSprite'
 import Navbar from './Navbar'
 
 function About() {
   return (
     <div className="min-h-screen bg-shiba-bg flex flex-col relative">
       <CloudBackground />
+      <ShibaSprite />
       <Navbar />
       
       <div className="flex-1 flex items-center justify-center relative z-10 p-4">

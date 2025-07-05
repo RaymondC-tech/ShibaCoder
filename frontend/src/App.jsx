@@ -8,6 +8,7 @@ import CreateLobbyForm from './components/CreateLobbyForm'
 import GameRoom from './components/GameRoom'
 import Modal from './components/Modal'
 import CloudBackground from './components/CloudBackground'
+import ShibaSprite from './components/ShibaSprite'
 import WaitingRoom from './components/WaitingRoom'
 import { useLobby } from './hooks/useLobby.js'
 import './App.css'
@@ -79,6 +80,7 @@ function GameLobby() {
   return (
     <div className="min-h-screen bg-shiba-bg flex flex-col relative">
       <CloudBackground />
+      <ShibaSprite />
       {gameState !== 'playing' && <Navbar />}
       
       <div className="flex-1 relative z-10">
