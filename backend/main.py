@@ -36,6 +36,55 @@ def validate_pin(pin: str) -> bool:
     """Validate 4-digit pin format"""
     return pin.isdigit() and len(pin) == 4
 
+def get_public_lobbies(search: str = "", page: int = 1, per_page: int = 4) -> Dict:
+    """Get paginated list of public lobbies with search"""
+    # Filter public lobbies in waiting status
+    public_lobbies = [
+        lobby for lobby in lobbies.values() 
+        if lobby["type"] == "public" and lobby["status"] == "waiting"
+    ]
+    
+    # Apply search filter if provided
+    if search:
+        search_lower = search.lower()
+        public_lobbies = [
+            lobby for lobby in public_lobbies
+            if search_lower in lobby["name"].lower()
+        ]
+    
+    # Sort by creation time (newest first)
+    public_lobbies.sort(key=lambda x: x["createdAt"], reverse=True)
+    
+    # Apply pagination
+    total_lobbies = len(public_lobbies)
+    total_pages = max(1, (total_lobbies + per_page - 1) // per_page)
+    
+    # Ensure page is valid
+    page = max(1, min(page, total_pages))
+    
+    start_idx = (page - 1) * per_page
+    end_idx = start_idx + per_page
+    page_lobbies = public_lobbies[start_idx:end_idx]
+    
+    # Return lobby data without sensitive info
+    return {
+        "lobbies": [{
+            "id": lobby["id"],
+            "name": lobby["name"],
+            "playerCount": len(lobby["players"]),
+            "maxPlayers": lobby["maxPlayers"],
+            "status": lobby["status"],
+            "createdAt": lobby["createdAt"]
+        } for lobby in page_lobbies],
+        "pagination": {
+            "currentPage": page,
+            "totalPages": total_pages,
+            "totalLobbies": total_lobbies,
+            "perPage": per_page
+        },
+        "search": search
+    }
+
 @app.get("/")
 def read_root():
     return {"message": "ShibaCoder API"}
@@ -123,6 +172,28 @@ async def create_lobby(sid, data):
         
     except Exception as e:
         await sio.emit("error", {"message": f"Failed to create lobby: {str(e)}"}, room=sid)
+
+@sio.event
+async def get_lobby_list(sid, data):
+    """Get paginated list of public lobbies with search"""
+    try:
+        # Extract parameters with defaults
+        page = data.get("page", 1) if data else 1
+        search = data.get("search", "").strip() if data else ""
+        
+        # Validate page number
+        if not isinstance(page, int) or page < 1:
+            page = 1
+        
+        # Get lobby list
+        lobby_data = get_public_lobbies(search=search, page=page)
+        
+        print(f"Client {sid} requested lobby list - page {page}, search: '{search}', found {len(lobby_data['lobbies'])} lobbies")
+        
+        await sio.emit("lobby_list", lobby_data, room=sid)
+        
+    except Exception as e:
+        await sio.emit("error", {"message": f"Failed to get lobby list: {str(e)}"}, room=sid)
 
 # Mount Socket.IO app
 socket_app = socketio.ASGIApp(sio, app)
