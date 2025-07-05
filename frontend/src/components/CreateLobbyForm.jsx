@@ -6,6 +6,7 @@ import { dbFunctions } from '../lib/supabase'
 function CreateLobbyForm({ onCreateRoom }) {
   const [playerName, setPlayerName] = useState('')
   const [lobbyName, setLobbyName] = useState('')
+  const [eloRange, setEloRange] = useState('easy') // 🎯 New ELO range state for demo
   const [isPrivate, setIsPrivate] = useState(false)
   const [pin, setPin] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -136,6 +137,66 @@ function CreateLobbyForm({ onCreateRoom }) {
           required
           disabled={!connected}
         />
+      </div>
+
+      {/* 🎯 ELO Range Dropdown - Demo Feature for Judges */}
+      <div className="nes-field">
+        <label htmlFor="elo_range_field" className="text-xs block mb-2">
+          <span className="flex items-center">
+            <i className="nes-icon trophy is-small" style={{ marginRight: '8px' }}></i>
+            Skill Level / ELO Range
+          </span>
+        </label>
+        <div 
+          className={`nes-select ${
+            eloRange === 'easy' ? 'border-green-500' : 
+            eloRange === 'medium' ? 'border-yellow-500' : 
+            'border-red-500'
+          }`}
+          style={{
+            backgroundColor: 
+              eloRange === 'easy' ? '#f0fff4' : 
+              eloRange === 'medium' ? '#fffbf0' : 
+              '#fff5f5',
+            borderWidth: '3px'
+          }}
+        >
+          <select 
+            id="elo_range_field"
+            value={eloRange} 
+            onChange={(e) => {
+              sounds.buttonClick()
+              setEloRange(e.target.value)
+            }}
+            disabled={!connected}
+            className="text-sm font-bold"
+            style={{
+              color: 
+                eloRange === 'easy' ? '#155724' : 
+                eloRange === 'medium' ? '#856404' : 
+                '#721c24'
+            }}
+          >
+            <option value="easy">
+              🟢 Easy League (Under 3,000 ELO)
+            </option>
+            <option value="medium">
+              🟡 Medium League (3,000 - 5,000 ELO)
+            </option>
+            <option value="hard">
+              🔴 Hard League (Above 5,000 ELO)
+            </option>
+          </select>
+        </div>
+        <div className={`text-xs mt-1 p-2 rounded ${
+          eloRange === 'easy' ? 'bg-green-100 text-green-800' : 
+          eloRange === 'medium' ? 'bg-yellow-100 text-yellow-800' : 
+          'bg-red-100 text-red-800'
+        }`}>
+          {eloRange === 'easy' && '🌱 Beginner-friendly questions and challenges'}
+          {eloRange === 'medium' && '⚡ Intermediate algorithms and data structures'}
+          {eloRange === 'hard' && '🔥 Expert-level competitive programming'}
+        </div>
       </div>
 
       <div className="nes-container is-rounded p-4 bg-amber-50">
