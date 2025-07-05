@@ -1,0 +1,3 @@
+# railway.toml
+[build]
+root = "backend"
