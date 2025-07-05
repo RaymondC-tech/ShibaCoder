@@ -30,33 +30,33 @@ function Leaderboard() {
   }
 
   const CategoryCard = ({ title, players, color, description }) => (
-    <div className="nes-container with-title bg-white">
+    <div className="nes-container with-title bg-white overflow-hidden">
       <p className="title" style={{ color }}>{title}</p>
       <p className="text-xs text-gray-600 mb-4">{description}</p>
       
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-96 overflow-y-auto">
         {players.map((player, index) => (
           <div 
             key={player.rank} 
-            className={`flex items-center justify-between p-3 rounded ${
+            className={`flex items-center justify-between p-3 rounded overflow-hidden ${
               index === 0 ? 'bg-yellow-100 border-2 border-yellow-400' : 
               index === 1 ? 'bg-gray-100 border-2 border-gray-400' :
               index === 2 ? 'bg-orange-100 border-2 border-orange-400' :
               'bg-blue-50 border border-blue-200'
             }`}
           >
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-200 text-amber-900 font-bold text-sm">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-amber-200 text-amber-900 font-bold text-sm">
                 #{player.rank}
               </div>
-              <span className="text-2xl">{player.avatar}</span>
-              <div>
-                <p className="font-bold text-sm">{player.name}</p>
+              <span className="text-2xl flex-shrink-0">{player.avatar}</span>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-sm truncate">{player.name}</p>
                 <p className="text-xs text-gray-600">{player.wins} wins</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="font-bold text-lg" style={{ color }}>{player.elo}</p>
+            <div className="text-right flex-shrink-0 ml-2">
+              <p className="font-bold text-lg" style={{ color }}>{player.elo.toLocaleString()}</p>
               <p className="text-xs text-gray-500">ELO</p>
             </div>
           </div>
@@ -74,16 +74,12 @@ function Leaderboard() {
       <div className="flex-1 flex items-center justify-center relative z-10 p-4">
         <div className="max-w-6xl w-full">
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="nes-container with-title is-centered bg-white max-w-2xl mx-auto relative">
-              <p className="title">🏆 Leaderboard</p>
+          <div className="text-center mb-12">
+            <div className="nes-container with-title is-centered bg-white max-w-2xl mx-auto">
+              <p className="title">Leaderboard</p>
               
-              {/* Trophy image positioned at top center */}
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-8 z-20">
-                <div className="text-6xl">🏆</div>
-              </div>
-              
-              <div className="pt-8">
+              <div className="py-4">
+                <div className="text-5xl mb-4">🏆</div>
                 <h2 className="text-lg font-bold text-amber-900 mb-2">Top Coders of ShibaCoder</h2>
                 <p className="text-sm text-gray-600">
                   Battle your way through the ranks and become a coding legend!
@@ -93,7 +89,7 @@ function Leaderboard() {
           </div>
 
           {/* Leaderboard Categories */}
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <CategoryCard 
               title="🟢 Easy League" 
               players={leaderboardData.easy}
