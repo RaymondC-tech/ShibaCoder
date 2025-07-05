@@ -133,7 +133,8 @@ def get_public_lobbies(search: str = "", page: int = 1, per_page: int = 4) -> Di
             "playerCount": len(lobby["players"]),
             "maxPlayers": lobby["maxPlayers"],
             "status": lobby["status"],
-            "createdAt": lobby["createdAt"]
+            "createdAt": lobby["createdAt"],
+            "elo_range": lobby.get("elo_range", "easy")
         } for lobby in page_lobbies],
         "pagination": {
             "currentPage": page,
