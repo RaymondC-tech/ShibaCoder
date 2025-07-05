@@ -7,16 +7,38 @@ function GameRoom({ lobby, players, playerName }) {
   const { testResults, gameFinished, submitCode, leaveLobby } = useLobby();
   const [code, setCode] = useState(`def two_sum(nums, target):
     # Write your solution here
-    pass`);
+    # Return the indices of two numbers that add up to target
+    # Example: nums = [2,7,11,15], target = 9 → return [0,1]
+    
+    return []`);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [gameStartTime] = useState(Date.now());
+  const [gameStartTime, setGameStartTime] = useState(null);
+  const [currentTime, setCurrentTime] = useState(Date.now());
   
+  // Set game start time when lobby status becomes 'playing'
+  useEffect(() => {
+    if (lobby?.status === 'playing' && !gameStartTime) {
+      setGameStartTime(Date.now());
+    }
+  }, [lobby?.status, gameStartTime]);
+
+  // Update timer every second
+  useEffect(() => {
+    if (gameStartTime && lobby?.status === 'playing') {
+      const interval = setInterval(() => {
+        setCurrentTime(Date.now());
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [gameStartTime, lobby?.status]);
+
   // Debug logging
   console.log('GameRoom state:', {
     lobby,
     players,
     playerName,
-    status: lobby?.status
+    status: lobby?.status,
+    gameStartTime
   });
 
   // Calculate progress for both players
@@ -40,7 +62,8 @@ function GameRoom({ lobby, players, playerName }) {
   };
 
   const formatTime = () => {
-    const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+    if (!gameStartTime) return '0:00';
+    const elapsed = Math.floor((currentTime - gameStartTime) / 1000);
     const minutes = Math.floor(elapsed / 60);
     const seconds = elapsed % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
