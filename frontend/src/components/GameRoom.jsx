@@ -131,8 +131,18 @@ function GameRoom({ lobby, players, playerName }) {
       </div>
 
       {gameFinished && (
-        <div className="winner-banner nes-container is-centered">
-          <h2>🎉 {gameFinished.winner === playerName ? 'You Won!' : `${gameFinished.winner} Won!`} 🎉</h2>
+        <div className={`nes-container is-centered ${gameFinished.winner === playerName ? 'winner-banner' : 'loser-banner'}`}>
+          {gameFinished.winner === playerName ? (
+            <h2>🎉 You Won! 🎉</h2>
+          ) : (
+            <h2>😢 You Lost! Better luck next time! 😢</h2>
+          )}
+          <p className="text-sm mt-2">
+            {gameFinished.winner === playerName 
+              ? "Congratulations on solving the challenge!" 
+              : `${gameFinished.winner} solved it first!`
+            }
+          </p>
           <button className="nes-btn is-success" onClick={leaveLobby}>
             Back to Lobby
           </button>
