@@ -246,3 +246,54 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Attack Effect Animations (NEW) */
+.attack-flashbang {
+  animation: flashbang 0.5s ease-in-out;
+}
+
+.attack-shake {
+  animation: shake 2s ease-in-out;
+}
+
+.attack-zoom-chaos {
+  animation: zoom-chaos 3s ease-in-out;
+}
+
+.attack-code-blur {
+  animation: code-blur 4s ease-in-out;
+}
+
+.attack-cursor-vanish {
+  caret-color: transparent !important;
+}
+
+.attack-cursor-vanish * {
+  caret-color: transparent !important;
+}
+
+/* Keyframe Animations */
+@keyframes flashbang {
+  0% { background-color: rgba(255, 255, 255, 0); }
+  50% { background-color: rgba(255, 255, 255, 0.9); }
+  100% { background-color: rgba(255, 255, 255, 0); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes zoom-chaos {
+  0%, 100% { transform: scale(1); }
+  20% { transform: scale(0.8); }
+  40% { transform: scale(1.2); }
+  60% { transform: scale(0.9); }
+  80% { transform: scale(1.1); }
+}
+
+@keyframes code-blur {
+  0%, 100% { filter: blur(0px); }
+  50% { filter: blur(2px); }
+}

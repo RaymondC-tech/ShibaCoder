@@ -418,6 +418,9 @@ async def websocket_endpoint(websocket: WebSocket):
             elif event == "submit_code":
                 await handle_submit_code(client_id, payload)
                 
+            elif event == "send_attack":
+                await handle_send_attack(client_id, payload)
+                
     except WebSocketDisconnect:
         print(f"Client {client_id} disconnected")
         await handle_disconnect(client_id)
@@ -870,6 +873,48 @@ async def handle_submit_code(client_id: str, data: dict):
         
     except Exception as e:
         await send_to_client(client_id, "error", {"message": f"Failed to submit code: {str(e)}"})
+
+async def handle_send_attack(client_id: str, data: dict):
+    """Handle attack sending between players"""
+    try:
+        if client_id not in players or not players[client_id]["lobby"]:
+            await send_to_client(client_id, "error", {"message": "You are not in a lobby"})
+            return
+        
+        lobby_id = players[client_id]["lobby"]
+        
+        if lobby_id not in lobbies:
+            await send_to_client(client_id, "error", {"message": "Lobby not found"})
+            return
+        
+        lobby = lobbies[lobby_id]
+        
+        # Check if game is in progress
+        if lobby["status"] != "playing":
+            await send_to_client(client_id, "error", {"message": "Game is not in progress"})
+            return
+        
+        # Get attack type
+        attack_type = data.get("attackType", "flashbang")
+        
+        # Find opponent
+        opponent_id = None
+        for player in lobby["players"]:
+            if player["id"] != client_id:
+                opponent_id = player["id"]
+                break
+        
+        if opponent_id and opponent_id in connections:
+            # Send attack to opponent
+            await send_to_client(opponent_id, "attack_received", {
+                "attackType": attack_type,
+                "attacker": players[client_id]["name"]
+            })
+            
+            print(f"Attack '{attack_type}' sent from {players[client_id]['name']} to opponent in lobby {lobby_id}")
+        
+    except Exception as e:
+        await send_to_client(client_id, "error", {"message": f"Failed to send attack: {str(e)}"})
 
 if __name__ == "__main__":
     import uvicorn
