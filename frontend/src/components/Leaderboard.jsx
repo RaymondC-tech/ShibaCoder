@@ -30,11 +30,11 @@ function Leaderboard() {
   }
 
   const CategoryCard = ({ title, players, color, description }) => (
-    <div className="nes-container with-title bg-white overflow-hidden">
-      <p className="title" style={{ color }}>{title}</p>
+    <div className="nes-container bg-white">
+      <h3 className="font-bold text-lg mb-2" style={{ color }}>{title}</h3>
       <p className="text-xs text-gray-600 mb-4">{description}</p>
       
-      <div className="space-y-3 max-h-96 overflow-y-auto">
+      <div className="space-y-3">
         {players.map((player, index) => (
           <div 
             key={player.rank} 
