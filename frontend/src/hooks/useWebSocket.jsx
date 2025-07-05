@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useRef } from 'react'
+import config from '../config/websocket.js'
 
 const WebSocketContext = createContext()
 
@@ -18,7 +19,9 @@ export const WebSocketProvider = ({ children }) => {
 
   useEffect(() => {
     // Create WebSocket connection
-    const ws = new WebSocket('ws://localhost:8000/ws')
+    const wsUrl = config.WS_URL
+    console.log('Connecting to WebSocket:', wsUrl)
+    const ws = new WebSocket(wsUrl)
 
     // Connection event handlers
     ws.onopen = () => {
