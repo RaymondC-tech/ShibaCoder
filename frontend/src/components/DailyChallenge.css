@@ -1,0 +1,109 @@
+/* Daily Challenge specific styles */
+
+/* Glowing header effect */
+.daily-challenge-header {
+  position: relative;
+  overflow: hidden;
+}
+
+.glow-effect {
+  position: relative;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.8));
+  }
+}
+
+/* Glowing button */
+.glow-button {
+  position: relative;
+  transition: all 0.3s ease;
+  animation: button-glow 2s ease-in-out infinite;
+}
+
+.glow-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4);
+}
+
+@keyframes button-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(251, 191, 36, 0.5),
+                0 0 10px rgba(251, 191, 36, 0.3),
+                0 0 15px rgba(251, 191, 36, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.7),
+                0 0 20px rgba(251, 191, 36, 0.5),
+                0 0 30px rgba(251, 191, 36, 0.3);
+  }
+}
+
+/* Countdown timer styling */
+.countdown-timer {
+  padding: 10px;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-radius: 8px;
+  border: 2px solid #ffc107;
+}
+
+/* Challenge info */
+.challenge-info {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #ffc107;
+}
+
+/* Rewards section */
+.rewards-section {
+  padding: 15px;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-radius: 8px;
+  border: 1px solid #c3e6cb;
+}
+
+.rewards-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.rewards-section li {
+  padding: 5px 0;
+}
+
+/* Streak counter animation */
+.nes-container.is-rounded {
+  animation: bounce-in 0.5s ease-out;
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .glow-effect h1 {
+    font-size: 1.5rem;
+  }
+  
+  .daily-challenge-header {
+    padding: 1.5rem;
+  }
+}
