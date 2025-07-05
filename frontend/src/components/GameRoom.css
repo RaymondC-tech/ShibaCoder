@@ -141,6 +141,7 @@
 .problem-section {
   overflow-y: auto;
   height: 100%;
+  padding-top: 12px;
 }
 
 .problem-description {
@@ -239,6 +240,8 @@
 
 .nes-container.with-title > .title {
   background-color: white;
+  margin-top: 8px;
+  padding-top: 4px;
 }
 
 /* Loading state */
