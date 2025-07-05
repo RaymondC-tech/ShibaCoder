@@ -17,6 +17,7 @@
     "react-dom": "^19.1.0",
     "react-kawaii": "^1.6.0",
     "react-responsive-spritesheet": "^2.3.9",
+    "react-router-dom": "^7.6.3",
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {

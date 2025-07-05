@@ -1,0 +1,63 @@
+import { Link } from 'react-router-dom'
+import { Browser } from 'react-kawaii'
+import CloudBackground from './CloudBackground'
+import Navbar from './Navbar'
+
+function About() {
+  return (
+    <div className="min-h-screen bg-shiba-bg flex flex-col relative">
+      <CloudBackground />
+      <Navbar />
+      
+      <div className="flex-1 flex items-center justify-center relative z-10 p-4">
+        <div className="nes-container with-title is-centered bg-white max-w-2xl">
+          <p className="title">About ShibaCoder</p>
+          
+          <div className="space-y-6">
+            <div className="text-center">
+              <Browser size={120} mood="excited" color="#FDB7DA" />
+            </div>
+            
+            <div className="space-y-4 text-sm">
+              <div className="nes-container is-rounded">
+                <h3 className="font-bold mb-2">What is ShibaCoder?</h3>
+                <p>ShibaCoder is a pixel-perfect coding challenge platform where developers can compete in real-time programming battles! Test your skills, learn new algorithms, and have fun with friends.</p>
+              </div>
+              
+              <div className="nes-container is-rounded">
+                <h3 className="font-bold mb-2">Features</h3>
+                <ul className="space-y-1">
+                  <li>• Real-time multiplayer coding battles</li>
+                  <li>• Retro pixel art design with NES.css</li>
+                  <li>• Various difficulty levels and challenges</li>
+                  <li>• Custom lobby creation and room codes</li>
+                  <li>• Kawaii mascots to keep you company!</li>
+                </ul>
+              </div>
+              
+              <div className="nes-container is-rounded">
+                <h3 className="font-bold mb-2">How to Play</h3>
+                <ol className="space-y-1">
+                  <li>1. Create or join a lobby</li>
+                  <li>2. Wait for your opponent</li>
+                  <li>3. Solve coding challenges as fast as you can</li>
+                  <li>4. First to complete wins!</li>
+                </ol>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <Link to="/">
+                <button type="button" className="nes-btn is-primary">
+                  Back to Home
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default About
