@@ -18,6 +18,7 @@ export interface Lobby {
   id: string
   host_id: string
   guest_id: string | null
+  name: string
   is_private: boolean
   password: string | null
   status: string
@@ -32,7 +33,11 @@ export const dbFunctions = {
   async createUser(username: string) {
     const { data, error } = await supabase
       .from('users')
-      .insert([{ username, elo: 1000 }])
+      .insert([{ 
+        id: crypto.randomUUID(), // Generate a UUID for the user
+        username, 
+        elo: 1000 
+      }])
       .select()
       .single()
     
@@ -52,11 +57,12 @@ export const dbFunctions = {
   },
 
   // Lobby functions
-  async createLobby(hostId: string, isPrivate: boolean = false, password: string | null = null) {
+  async createLobby(hostId: string, name: string, isPrivate: boolean = false, password: string | null = null) {
     const { data, error } = await supabase
       .from('lobbies')
       .insert([{ 
-        host_id: hostId, 
+        host_id: hostId,
+        name: name,
         is_private: isPrivate, 
         password,
         status: 'waiting' 

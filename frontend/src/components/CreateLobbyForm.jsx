@@ -1,38 +1,77 @@
 import { useState } from 'react'
 import { sounds } from '../utils/sounds'
 import { useLobby } from '../hooks/useLobby.js'
+import { dbFunctions } from '../lib/supabase'
 
 function CreateLobbyForm({ onCreateRoom }) {
   const [playerName, setPlayerName] = useState('')
   const [lobbyName, setLobbyName] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
   const [pin, setPin] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { createLobby, error, connected } = useLobby()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (playerName.trim() && lobbyName.trim() && (!isPrivate || pin.length === 4)) {
+      setIsSubmitting(true)
       sounds.buttonClick()
       
-      // Create lobby via Socket.IO
-      createLobby({
-        name: lobbyName.trim(),
-        type: isPrivate ? 'private' : 'public',
-        pin: isPrivate ? pin : undefined,
-        playerName: playerName.trim()
-      })
-      
-      // Store player name for future use
-      localStorage.setItem('shibacoder_player_name', playerName.trim())
-      
-      // Call the original callback (for UI state management)
-      onCreateRoom({
-        playerName: playerName.trim(),
-        lobbyName: lobbyName.trim(),
-        isPrivate,
-        pin: isPrivate ? pin : null
-      })
+      try {
+        // First, ensure the user exists in Supabase
+        let user = await dbFunctions.getUserByUsername(playerName.trim())
+        
+        if (!user) {
+          // Create user if they don't exist
+          console.log('Creating new user:', playerName.trim())
+          user = await dbFunctions.createUser(playerName.trim())
+        }
+        
+        // Create lobby in Supabase
+        console.log('Creating lobby in Supabase:', {
+          hostId: user.id,
+          isPrivate,
+          password: isPrivate ? pin : null
+        })
+        
+        const supabaseLobby = await dbFunctions.createLobby(
+          user.id,
+          lobbyName.trim(),
+          isPrivate,
+          isPrivate ? pin : null
+        )
+        
+        console.log('Lobby created in Supabase:', supabaseLobby)
+        
+        // Also create lobby via Socket.IO for real-time features
+        createLobby({
+          name: lobbyName.trim(),
+          type: isPrivate ? 'private' : 'public',
+          pin: isPrivate ? pin : undefined,
+          playerName: playerName.trim(),
+          supabaseId: supabaseLobby.id // Include Supabase ID for reference
+        })
+        
+        // Store player name for future use
+        localStorage.setItem('shibacoder_player_name', playerName.trim())
+        
+        // Call the original callback (for UI state management)
+        onCreateRoom({
+          playerName: playerName.trim(),
+          lobbyName: lobbyName.trim(),
+          isPrivate,
+          pin: isPrivate ? pin : null,
+          supabaseId: supabaseLobby.id
+        })
+        
+      } catch (error) {
+        console.error('Failed to create lobby:', error)
+        // You might want to show an error message to the user here
+        alert(`Failed to create lobby: ${error.message}`)
+      } finally {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -138,10 +177,10 @@ function CreateLobbyForm({ onCreateRoom }) {
 
       <button
         type="submit"
-        className={`nes-btn ${(playerName.trim() && lobbyName.trim() && (!isPrivate || pin.length === 4) && connected) ? 'is-primary' : 'is-disabled'} w-full pixel-shadow`}
-        disabled={!playerName.trim() || !lobbyName.trim() || (isPrivate && pin.length !== 4) || !connected}
+        className={`nes-btn ${(playerName.trim() && lobbyName.trim() && (!isPrivate || pin.length === 4) && connected && !isSubmitting) ? 'is-primary' : 'is-disabled'} w-full pixel-shadow`}
+        disabled={!playerName.trim() || !lobbyName.trim() || (isPrivate && pin.length !== 4) || !connected || isSubmitting}
       >
-        Create Lobby
+        {isSubmitting ? 'Creating...' : 'Create Lobby'}
       </button>
     </form>
   )
