@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { useLobby } from '../hooks/useLobby';
+import AttackQuestions from './AttackQuestions';
+import { useWebSocket } from '../hooks/useWebSocket';
 import './GameRoom.css';
 
 function GameRoom({ lobby, players, playerName }) {
   const { testResults, gameFinished, submitCode, leaveLobby } = useLobby();
+  const { emit, on, off } = useWebSocket();
   const [code, setCode] = useState(`def two_sum(nums, target):
     # Write your solution here
     # Return the indices of two numbers that add up to target
@@ -14,6 +17,9 @@ function GameRoom({ lobby, players, playerName }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [gameStartTime, setGameStartTime] = useState(null);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  
+  // Attack system state (NEW - doesn't affect existing logic)
+  const [activeAttackEffect, setActiveAttackEffect] = useState(null);
   
   // Set game start time when lobby status becomes 'playing'
   useEffect(() => {
@@ -31,6 +37,37 @@ function GameRoom({ lobby, players, playerName }) {
       return () => clearInterval(interval);
     }
   }, [gameStartTime, lobby?.status]);
+
+  // Attack system handlers (NEW - isolated from existing logic)
+  useEffect(() => {
+    const handleAttackReceived = (data) => {
+      console.log('Attack received:', data);
+      setActiveAttackEffect(data.attackType);
+      
+      // Auto-clear attack effect after duration
+      const duration = data.attackType === 'zoom-chaos' ? 3000 : 
+                      data.attackType === 'code-blur' ? 4000 : 
+                      data.attackType === 'cursor-vanish' ? 3000 :
+                      data.attackType === 'shake' ? 2000 : 500; // flashbang
+      
+      setTimeout(() => {
+        setActiveAttackEffect(null);
+      }, duration);
+    };
+
+    on('attack_received', handleAttackReceived);
+    
+    return () => {
+      off('attack_received', handleAttackReceived);
+    };
+  }, [on, off]);
+
+  const handleSendAttack = (attackType) => {
+    if (lobby?.status === 'playing' && !gameFinished) {
+      emit('send_attack', { attackType });
+      console.log('Sending attack:', attackType);
+    }
+  };
 
   // Debug logging
   console.log('GameRoom state:', {
@@ -165,6 +202,13 @@ function GameRoom({ lobby, players, playerName }) {
             ))}
           </div>
 
+          {/* Attack Questions Section (NEW) */}
+          <AttackQuestions 
+            playerName={playerName}
+            onSendAttack={handleSendAttack}
+            gameFinished={gameFinished}
+          />
+
           {testResults && (
             <div className="test-results nes-container is-rounded">
               <h4>Test Results</h4>
@@ -177,7 +221,14 @@ function GameRoom({ lobby, players, playerName }) {
         </div>
 
         <div className="editor-section">
-          <div className="editor-container nes-container">
+          <div className={`editor-container nes-container ${
+            activeAttackEffect === 'flashbang' ? 'attack-flashbang' :
+            activeAttackEffect === 'shake' ? 'attack-shake' :
+            activeAttackEffect === 'zoom-chaos' ? 'attack-zoom-chaos' :
+            activeAttackEffect === 'code-blur' ? 'attack-code-blur' :
+            activeAttackEffect === 'cursor-vanish' ? 'attack-cursor-vanish' :
+            ''
+          }`}>
             <Editor
               height="500px"
               language="python"
