@@ -46,7 +46,7 @@ function GameRoom({ lobby, players, playerName }) {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  if (!lobby || lobby.status !== 'playing') {
+  if (!lobby || (lobby.status !== 'playing' && lobby.status !== 'finished')) {
     return (
       <div className="game-room">
         <div className="nes-container">
