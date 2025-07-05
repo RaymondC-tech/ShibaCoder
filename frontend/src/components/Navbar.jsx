@@ -28,6 +28,15 @@ function Navbar() {
               About
             </button>
           </Link>
+          <Link to="/leaderboard">
+            <button 
+              type="button" 
+              className="nes-btn is-normal text-xs px-4 py-1"
+              style={{ height: '32px' }}
+            >
+              Leaderboard
+            </button>
+          </Link>
           <button 
             type="button" 
             className="nes-btn is-normal text-xs px-4 py-1"

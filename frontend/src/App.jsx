@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
 import FrontPage from './components/FrontPage'
 import About from './components/About'
+import Leaderboard from './components/Leaderboard'
 import Navbar from './components/Navbar'
 import LobbyList from './components/LobbyList'
 import CreateLobbyForm from './components/CreateLobbyForm'
@@ -140,6 +141,7 @@ function App() {
         <Route path="/" element={<FrontPage />} />
         <Route path="/game" element={<GameLobby />} />
         <Route path="/about" element={<About />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
       </Routes>
     </Router>
   )
