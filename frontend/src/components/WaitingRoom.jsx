@@ -1,14 +1,20 @@
 import { Browser } from 'react-kawaii'
 import { sounds } from '../utils/sounds'
-import { useLobby } from '../hooks/useLobby'
+import { useLobby } from '../hooks/useLobby.js'
 
 function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobby, onGameStart }) {
   const { playerReady } = useLobby()
+  
+  // Debug logging
+  console.log('WaitingRoom Debug:', { lobby, players, playerName, connected })
   
   const currentPlayer = players.find(p => p.name === playerName)
   const opponent = players.find(p => p.name !== playerName)
   const isFull = players.length === lobby.maxPlayers
   const allReady = players.length === 2 && players.every(p => p.ready)
+  
+  // More debug logging
+  console.log('Player matching:', { currentPlayer, opponent, isFull, allReady })
 
   const handleLeaveLobby = () => {
     sounds.buttonClick()
@@ -177,27 +183,41 @@ function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobb
               Leave Lobby
             </button>
             
-            {/* Ready button - only show when lobby is full and player is not ready */}
-            {isFull && currentPlayer && !currentPlayer.ready && (
-              <button
-                type="button"
-                className="nes-btn is-success text-xs"
-                onClick={handlePlayerReady}
-                disabled={!connected}
-              >
-                Ready Up!
-              </button>
-            )}
-
-            {/* Show ready status when player is ready */}
-            {isFull && currentPlayer && currentPlayer.ready && !allReady && (
-              <button
-                type="button"
-                className="nes-btn is-disabled text-xs"
-                disabled
-              >
-                Waiting for opponent...
-              </button>
+            {/* Debug info */}
+            <div className="text-xs text-gray-500 mb-2">
+              Debug: currentPlayer={currentPlayer?.name || 'undefined'}, isFull={isFull.toString()}, ready={currentPlayer?.ready?.toString() || 'undefined'}
+            </div>
+            
+            {/* Ready button - show for any player when lobby is full */}
+            {isFull && (
+              <>
+                {!currentPlayer?.ready ? (
+                  <button
+                    type="button"
+                    className="nes-btn is-success text-xs"
+                    onClick={handlePlayerReady}
+                    disabled={!connected}
+                  >
+                    Ready Up!
+                  </button>
+                ) : !allReady ? (
+                  <button
+                    type="button"
+                    className="nes-btn is-disabled text-xs"
+                    disabled
+                  >
+                    Waiting for opponent...
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="nes-btn is-disabled text-xs"
+                    disabled
+                  >
+                    Game Starting...
+                  </button>
+                )}
+              </>
             )}
           </div>
 

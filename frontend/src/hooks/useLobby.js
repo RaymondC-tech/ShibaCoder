@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSocket } from './useSocket.jsx'
+import { useWebSocket } from './useWebSocket.jsx'
 
 export const useLobby = () => {
-  const { socket, connected } = useSocket()
+  const { socket, connected, emit, on, off } = useWebSocket()
   const [lobbies, setLobbies] = useState([])
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -16,38 +16,48 @@ export const useLobby = () => {
   const [error, setError] = useState(null)
   const [testResults, setTestResults] = useState(null)
   const [gameFinished, setGameFinished] = useState(null)
+  const [currentPlayerName, setCurrentPlayerName] = useState(null)
 
   // Socket event handlers
   useEffect(() => {
-    if (!socket) return
+    if (!connected) return
 
     // Lobby list response
-    socket.on('lobby_list', (data) => {
+    const handleLobbyList = (data) => {
       console.log('Received lobby list:', data)
       setLobbies(data.lobbies)
       setPagination(data.pagination)
       setLoading(false)
       setError(null)
-    })
+    }
 
     // Lobby created response
-    socket.on('lobby_created', (data) => {
+    const handleLobbyCreated = (data) => {
       console.log('Lobby created:', data)
       setCurrentLobby(data.lobbyData)
       setPlayers(data.lobbyData.players)
+      // Set current player name (creator is always the first player)
+      if (data.lobbyData.players.length > 0) {
+        setCurrentPlayerName(data.lobbyData.players[0].name)
+      }
       setError(null)
-    })
+    }
 
     // Lobby joined response
-    socket.on('lobby_joined', (data) => {
+    const handleLobbyJoined = (data) => {
       console.log('Joined lobby:', data)
       setCurrentLobby(data.lobbyData)
       setPlayers(data.lobbyData.players)
+      // Set current player name (joiner is always the last player)
+      if (data.lobbyData.players.length > 0) {
+        const lastPlayer = data.lobbyData.players[data.lobbyData.players.length - 1]
+        setCurrentPlayerName(lastPlayer.name)
+      }
       setError(null)
-    })
+    }
 
     // Player joined/left updates
-    socket.on('player_joined', (data) => {
+    const handlePlayerJoined = (data) => {
       console.log('Player joined:', data)
       setPlayers(data.players)
       // Update current lobby player count
@@ -57,9 +67,9 @@ export const useLobby = () => {
           players: data.players
         }))
       }
-    })
+    }
 
-    socket.on('player_left', (data) => {
+    const handlePlayerLeft = (data) => {
       console.log('Player left:', data)
       setPlayers(data.players)
       // Update current lobby player count
@@ -69,18 +79,19 @@ export const useLobby = () => {
           players: data.players
         }))
       }
-    })
+    }
 
     // Lobby left response
-    socket.on('lobby_left', (data) => {
+    const handleLobbyLeft = (data) => {
       console.log('Left lobby:', data)
       setCurrentLobby(null)
       setPlayers([])
+      setCurrentPlayerName(null)
       setError(null)
-    })
+    }
 
     // Player ready updates
-    socket.on('player_ready_update', (data) => {
+    const handlePlayerReadyUpdate = (data) => {
       console.log('Player ready update:', data)
       setPlayers(data.players)
       // Update current lobby with latest player ready states
@@ -90,10 +101,10 @@ export const useLobby = () => {
           players: data.players
         }))
       }
-    })
+    }
 
     // Game start event
-    socket.on('game_start', (data) => {
+    const handleGameStart = (data) => {
       console.log('Game started:', data)
       if (currentLobby) {
         setCurrentLobby(prev => ({
@@ -104,24 +115,24 @@ export const useLobby = () => {
         }))
       }
       setError(null)
-    })
+    }
 
     // Test results
-    socket.on('test_results', (data) => {
+    const handleTestResults = (data) => {
       console.log('Test results received:', data)
       setTestResults(data)
       setError(null)
-    })
+    }
 
     // Progress updates
-    socket.on('progress_update', (data) => {
+    const handleProgressUpdate = (data) => {
       console.log('Progress update:', data)
       // Update players with progress info
       setPlayers(data.players)
-    })
+    }
 
     // Game finished
-    socket.on('game_finished', (data) => {
+    const handleGameFinished = (data) => {
       console.log('Game finished:', data)
       setGameFinished(data)
       if (currentLobby) {
@@ -133,43 +144,58 @@ export const useLobby = () => {
         }))
       }
       setError(null)
-    })
+    }
 
     // Real-time lobby list updates
-    socket.on('lobby_list_update', (data) => {
+    const handleLobbyListUpdate = (data) => {
       console.log('Received real-time lobby list update:', data)
       setLobbies(data.lobbies)
       setPagination(data.pagination)
-    })
+    }
 
     // Error handling
-    socket.on('error', (data) => {
-      console.error('Socket error:', data)
+    const handleError = (data) => {
+      console.error('WebSocket error:', data)
       setError(data.message)
       setLoading(false)
-    })
+    }
+
+    // Register event handlers
+    on('lobby_list', handleLobbyList)
+    on('lobby_created', handleLobbyCreated)
+    on('lobby_joined', handleLobbyJoined)
+    on('player_joined', handlePlayerJoined)
+    on('player_left', handlePlayerLeft)
+    on('lobby_left', handleLobbyLeft)
+    on('player_ready_update', handlePlayerReadyUpdate)
+    on('game_start', handleGameStart)
+    on('test_results', handleTestResults)
+    on('progress_update', handleProgressUpdate)
+    on('game_finished', handleGameFinished)
+    on('lobby_list_update', handleLobbyListUpdate)
+    on('error', handleError)
 
     // Cleanup listeners
     return () => {
-      socket.off('lobby_list')
-      socket.off('lobby_created')
-      socket.off('lobby_joined')
-      socket.off('player_joined')
-      socket.off('player_left')
-      socket.off('lobby_left')
-      socket.off('player_ready_update')
-      socket.off('game_start')
-      socket.off('test_results')
-      socket.off('progress_update')
-      socket.off('game_finished')
-      socket.off('lobby_list_update')
-      socket.off('error')
+      off('lobby_list', handleLobbyList)
+      off('lobby_created', handleLobbyCreated)
+      off('lobby_joined', handleLobbyJoined)
+      off('player_joined', handlePlayerJoined)
+      off('player_left', handlePlayerLeft)
+      off('lobby_left', handleLobbyLeft)
+      off('player_ready_update', handlePlayerReadyUpdate)
+      off('game_start', handleGameStart)
+      off('test_results', handleTestResults)
+      off('progress_update', handleProgressUpdate)
+      off('game_finished', handleGameFinished)
+      off('lobby_list_update', handleLobbyListUpdate)
+      off('error', handleError)
     }
-  }, [socket, currentLobby])
+  }, [connected, currentLobby, on, off])
 
   // Actions
   const getLobbyList = useCallback((page = 1, search = '') => {
-    if (!socket || !connected) {
+    if (!connected) {
       setError('Not connected to server')
       return
     }
@@ -178,11 +204,11 @@ export const useLobby = () => {
     setError(null)
     
     console.log('Requesting lobby list:', { page, search })
-    socket.emit('get_lobby_list', { page, search })
-  }, [socket, connected])
+    emit('get_lobby_list', { page, search })
+  }, [connected, emit])
 
   const createLobby = useCallback((lobbyData) => {
-    if (!socket || !connected) {
+    if (!connected) {
       setError('Not connected to server')
       return
     }
@@ -190,11 +216,11 @@ export const useLobby = () => {
     setError(null)
     
     console.log('Creating lobby:', lobbyData)
-    socket.emit('create_lobby', lobbyData)
-  }, [socket, connected])
+    emit('create_lobby', lobbyData)
+  }, [connected, emit])
 
-  const joinLobby = useCallback((lobbyId, pin = null) => {
-    if (!socket || !connected) {
+  const joinLobby = useCallback((lobbyId, pin = null, playerName = null) => {
+    if (!connected) {
       setError('Not connected to server')
       return
     }
@@ -203,13 +229,14 @@ export const useLobby = () => {
     
     const joinData = { lobbyId }
     if (pin) joinData.pin = pin
+    if (playerName) joinData.playerName = playerName
     
     console.log('Joining lobby:', joinData)
-    socket.emit('join_lobby', joinData)
-  }, [socket, connected])
+    emit('join_lobby', joinData)
+  }, [connected, emit])
 
   const leaveLobby = useCallback(() => {
-    if (!socket || !connected) {
+    if (!connected) {
       setError('Not connected to server')
       return
     }
@@ -217,11 +244,11 @@ export const useLobby = () => {
     setError(null)
     
     console.log('Leaving lobby')
-    socket.emit('leave_lobby')
-  }, [socket, connected])
+    emit('leave_lobby', {})
+  }, [connected, emit])
 
   const playerReady = useCallback(() => {
-    if (!socket || !connected) {
+    if (!connected) {
       setError('Not connected to server')
       return
     }
@@ -229,11 +256,11 @@ export const useLobby = () => {
     setError(null)
     
     console.log('Player ready')
-    socket.emit('player_ready')
-  }, [socket, connected])
+    emit('player_ready', {})
+  }, [connected, emit])
 
   const submitCode = useCallback((code, language = 'python') => {
-    if (!socket || !connected) {
+    if (!connected) {
       setError('Not connected to server')
       return
     }
@@ -246,8 +273,8 @@ export const useLobby = () => {
     setError(null)
     
     console.log('Submitting code:', { code: code.substring(0, 50) + '...', language })
-    socket.emit('submit_code', { code, language })
-  }, [socket, connected])
+    emit('submit_code', { code, language })
+  }, [connected, emit])
 
   return {
     // State
@@ -260,6 +287,7 @@ export const useLobby = () => {
     connected,
     testResults,
     gameFinished,
+    currentPlayerName,
 
     // Actions
     getLobbyList,

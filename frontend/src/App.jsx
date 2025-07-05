@@ -9,7 +9,7 @@ import GameRoom from './components/GameRoom'
 import Modal from './components/Modal'
 import CloudBackground from './components/CloudBackground'
 import WaitingRoom from './components/WaitingRoom'
-import { useLobby } from './hooks/useLobby'
+import { useLobby } from './hooks/useLobby.js'
 import './App.css'
 
 // Main game component that handles the lobby/game logic
@@ -24,7 +24,8 @@ function GameLobby() {
     players, 
     connected, 
     error,
-    leaveLobby 
+    leaveLobby,
+    currentPlayerName 
   } = useLobby()
 
   // Watch for lobby state changes to update game state
@@ -33,10 +34,9 @@ function GameLobby() {
       // When we join/create a lobby, go to waiting room
       if (currentLobby.status === 'waiting') {
         setGameState('waiting')
-        // Get player name from localStorage if available
-        const savedName = localStorage.getItem('shibacoder_player_name')
-        if (savedName) {
-          setPlayerName(savedName)
+        // Use the current player name from the lobby hook
+        if (currentPlayerName) {
+          setPlayerName(currentPlayerName)
         }
       }
       // When game starts, go to playing state
@@ -47,7 +47,7 @@ function GameLobby() {
       // When we leave lobby or get disconnected, go back to lobby list
       setGameState('lobbyList')
     }
-  }, [currentLobby])
+  }, [currentLobby, currentPlayerName])
 
   const handleCreateLobby = () => {
     setShowCreateModal(true)

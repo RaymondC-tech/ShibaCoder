@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import Editor from '@monaco-editor/react'
 import { Cat, Ghost } from 'react-kawaii'
 import { sounds } from '../utils/sounds'
-import { useLobby } from '../hooks/useLobby'
+import { useLobby } from '../hooks/useLobby.js'
 
 function GameRoom({ lobby, players, playerName }) {
   const [code, setCode] = useState('')

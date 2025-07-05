@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { sounds } from '../utils/sounds'
-import { useLobby } from '../hooks/useLobby'
+import { useLobby } from '../hooks/useLobby.js'
 
 function CreateLobbyForm({ onCreateRoom }) {
   const [playerName, setPlayerName] = useState('')
@@ -19,7 +19,8 @@ function CreateLobbyForm({ onCreateRoom }) {
       createLobby({
         name: lobbyName.trim(),
         type: isPrivate ? 'private' : 'public',
-        pin: isPrivate ? pin : undefined
+        pin: isPrivate ? pin : undefined,
+        playerName: playerName.trim()
       })
       
       // Store player name for future use

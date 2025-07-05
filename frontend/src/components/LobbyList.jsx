@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { sounds } from '../utils/sounds'
-import { useLobby } from '../hooks/useLobby'
+import { useLobby } from '../hooks/useLobby.js'
 
 function LobbyList({ onCreateLobby, onJoinLobby }) {
   const [selectedLobby, setSelectedLobby] = useState(null)
   const [pinInput, setPinInput] = useState('')
   const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [showNameModal, setShowNameModal] = useState(false)
+  const [playerNameInput, setPlayerNameInput] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -40,23 +42,52 @@ function LobbyList({ onCreateLobby, onJoinLobby }) {
 
   const handleJoinClick = (lobby) => {
     sounds.buttonClick()
-    // Check if lobby is private (note: backend sends 'type' field, not 'isPrivate')
-    if (lobby.type === 'private') {
-      setSelectedLobby(lobby)
-      setShowPasswordModal(true)
+    setSelectedLobby(lobby)
+    
+    // First check if we have a saved player name
+    const savedName = localStorage.getItem('shibacoder_player_name')
+    if (savedName) {
+      setPlayerNameInput(savedName)
+      // If it's a private lobby, show password modal, otherwise join directly
+      if (lobby.type === 'private') {
+        setShowPasswordModal(true)
+      } else {
+        // Join public lobby with saved name
+        joinLobby(lobby.id, null, savedName)
+      }
     } else {
-      // Join public lobby directly
-      joinLobby(lobby.id)
-      // The UI transition to waiting room will happen automatically via App.jsx useEffect
+      // No saved name, show name prompt first
+      setShowNameModal(true)
+    }
+  }
+
+  const handleNameSubmit = () => {
+    sounds.buttonClick()
+    if (playerNameInput.trim()) {
+      // Save the name for future use
+      localStorage.setItem('shibacoder_player_name', playerNameInput.trim())
+      
+      // If it's a private lobby, show password modal next
+      if (selectedLobby.type === 'private') {
+        setShowNameModal(false)
+        setShowPasswordModal(true)
+      } else {
+        // Join public lobby directly
+        joinLobby(selectedLobby.id, null, playerNameInput.trim())
+        setShowNameModal(false)
+        setPlayerNameInput('')
+      }
     }
   }
 
   const handlePasswordSubmit = () => {
     sounds.buttonClick()
     if (pinInput.length === 4) {
-      joinLobby(selectedLobby.id, pinInput)
+      const playerName = playerNameInput || localStorage.getItem('shibacoder_player_name')
+      joinLobby(selectedLobby.id, pinInput, playerName)
       setShowPasswordModal(false)
       setPinInput('')
+      setPlayerNameInput('')
       // The UI transition to waiting room will happen automatically via App.jsx useEffect
     }
   }
@@ -227,6 +258,51 @@ function LobbyList({ onCreateLobby, onJoinLobby }) {
           </div>
         )}
 
+        {/* Name Modal */}
+        {showNameModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="nes-container is-dark bg-white max-w-md w-full">
+              <h3 className="text-sm font-bold mb-4">Enter Your Name</h3>
+              <p className="text-xs text-gray-600 mb-4">
+                Please enter your name to join the lobby.
+              </p>
+              <div className="nes-field mb-4">
+                <input
+                  type="text"
+                  className="nes-input"
+                  placeholder="Your name..."
+                  value={playerNameInput}
+                  onChange={(e) => setPlayerNameInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && playerNameInput.trim() && handleNameSubmit()}
+                  maxLength={12}
+                  autoFocus
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="nes-btn flex-1"
+                  onClick={() => {
+                    sounds.buttonClick()
+                    setShowNameModal(false)
+                    setPlayerNameInput('')
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="nes-btn is-primary flex-1"
+                  onClick={handleNameSubmit}
+                  disabled={!playerNameInput.trim()}
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Password Modal */}
         {showPasswordModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -255,6 +331,7 @@ function LobbyList({ onCreateLobby, onJoinLobby }) {
                     sounds.buttonClick()
                     setShowPasswordModal(false)
                     setPinInput('')
+                    setPlayerNameInput('')
                   }}
                 >
                   Cancel
