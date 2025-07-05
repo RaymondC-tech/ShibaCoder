@@ -156,6 +156,10 @@ async def broadcast_lobby_list_update():
 # Judge0 functions (same as before)
 async def judge0_submit_code(code: str, test_cases: list) -> dict:
     """Submit code to Judge0 API and return test results"""
+    print(f"DEBUG: JUDGE0_API_KEY exists: {JUDGE0_API_KEY is not None}")
+    print(f"DEBUG: JUDGE0_API_HOST: {JUDGE0_API_HOST}")
+    print(f"DEBUG: JUDGE0_BASE_URL: {JUDGE0_BASE_URL}")
+    
     if not JUDGE0_API_KEY:
         print("Warning: Judge0 API key not configured, using fake results")
         return run_fake_tests(code)
@@ -166,6 +170,8 @@ async def judge0_submit_code(code: str, test_cases: list) -> dict:
         "Content-Type": "application/json"
     }
     
+    print(f"DEBUG: About to submit to Judge0 with {len(test_cases)} test cases")
+    
     passed_tests = 0
     total_tests = len(test_cases)
     errors = []
@@ -174,6 +180,7 @@ async def judge0_submit_code(code: str, test_cases: list) -> dict:
     async with httpx.AsyncClient() as client:
         try:
             for i, test_case in enumerate(test_cases):
+                print(f"DEBUG: Processing test case {i+1}")
                 # Prepare the submission
                 submission_data = {
                     "language_id": PYTHON_LANGUAGE_ID,
@@ -190,8 +197,11 @@ async def judge0_submit_code(code: str, test_cases: list) -> dict:
                     timeout=30.0
                 )
                 
+                print(f"DEBUG: Submit response status: {submit_response.status_code}")
+                
                 if submit_response.status_code != 201:
                     submit_error = submit_response.text if submit_response.text else "Submission failed"
+                    print(f"DEBUG: Submit failed: {submit_error}")
                     errors.append(f"Test {i+1}: {submit_error}")
                     continue
                 

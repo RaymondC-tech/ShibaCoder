@@ -98,14 +98,35 @@
   animation: celebration 1s ease-in-out;
 }
 
+/* Loser Banner */
+.loser-banner {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 30px;
+  background: linear-gradient(45deg, #ff6b6b, #ffa8a8);
+  animation: fadeIn 1s ease-in-out;
+}
+
 @keyframes celebration {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
 }
 
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 .winner-banner h2 {
   margin-bottom: 20px;
   font-size: 32px;
+  color: #8B4513;
+}
+
+.loser-banner h2 {
+  margin-bottom: 20px;
+  font-size: 28px;
+  color: #8B0000;
 }
 
 /* Game Content */
