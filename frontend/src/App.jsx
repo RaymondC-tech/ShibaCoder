@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
+import FrontPage from './components/FrontPage'
+import About from './components/About'
 import Navbar from './components/Navbar'
 import LobbyList from './components/LobbyList'
 import CreateLobbyForm from './components/CreateLobbyForm'
@@ -9,7 +12,9 @@ import WaitingRoom from './components/WaitingRoom'
 import { useLobby } from './hooks/useLobby'
 import './App.css'
 
-function App() {
+// Main game component that handles the lobby/game logic
+function GameLobby() {
+  const navigate = useNavigate()
   const [gameState, setGameState] = useState('lobbyList')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [playerName, setPlayerName] = useState('')
@@ -115,6 +120,19 @@ function App() {
         )}
       </div>
     </div>
+  )
+}
+
+// Main App component with routing
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<FrontPage />} />
+        <Route path="/game" element={<GameLobby />} />
+        <Route path="/about" element={<About />} />
+      </Routes>
+    </Router>
   )
 }
 

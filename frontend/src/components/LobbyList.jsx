@@ -104,8 +104,8 @@ function LobbyList({ onCreateLobby, onJoinLobby }) {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-amber-900 flex items-center gap-3">
             <img 
-              src="/logo.svg" 
-              alt="ShibaCoder Logo" 
+              src="/shibaface.svg" 
+              alt="Shiba Face" 
               className="h-14 w-14"
               style={{ imageRendering: 'auto', objectFit: 'contain' }}
             />
