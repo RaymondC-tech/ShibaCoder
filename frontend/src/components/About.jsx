@@ -12,13 +12,20 @@ function About() {
       <Navbar />
       
       <div className="flex-1 flex items-center justify-center relative z-10 p-4">
-        <div className="nes-container with-title is-centered bg-white max-w-2xl">
+        <div className="nes-container with-title is-centered bg-white max-w-2xl relative">
           <p className="title">About ShibaCoder</p>
           
-          <div className="space-y-6">
-            <div className="text-center">
-              <Browser size={120} mood="excited" color="#FDB7DA" />
-            </div>
+          {/* Shiba question image positioned at top center */}
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-8 z-20">
+            <img 
+              src="/shibaquestion.svg" 
+              alt="Curious Shiba Inu" 
+              className="w-40 h-auto"
+              style={{ imageRendering: 'pixelated' }}
+            />
+          </div>
+          
+          <div className="space-y-6 pt-24">
             
             <div className="space-y-4 text-sm">
               <div className="nes-container is-rounded">
@@ -30,10 +37,8 @@ function About() {
                 <h3 className="font-bold mb-2">Features</h3>
                 <ul className="space-y-1">
                   <li>• Real-time multiplayer coding battles</li>
-                  <li>• Retro pixel art design with NES.css</li>
                   <li>• Various difficulty levels and challenges</li>
                   <li>• Custom lobby creation and room codes</li>
-                  <li>• Kawaii mascots to keep you company!</li>
                 </ul>
               </div>
               

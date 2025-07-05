@@ -35,24 +35,14 @@ const ShibaSprite = ({ behavior = 'follow' }) => {
       setCursorPosition({ x: e.clientX, y: e.clientY })
       lastMoveTimeRef.current = Date.now()
       
-      // Clear idle timeout when mouse moves
-      if (idleTimeoutRef.current) {
-        clearTimeout(idleTimeoutRef.current)
-      }
-      
-      // Set idle timeout
-      idleTimeoutRef.current = setTimeout(() => {
-        setIsIdle(true)
-        setIsSitting(true)
-      }, 300) // 300ms of no movement
+      // Clear sitting state when mouse moves
+      setIsSitting(false)
+      setIsIdle(false)
     }
 
     window.addEventListener('mousemove', handleMouseMove)
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
-      if (idleTimeoutRef.current) {
-        clearTimeout(idleTimeoutRef.current)
-      }
     }
   }, [behavior])
 
@@ -83,14 +73,12 @@ const ShibaSprite = ({ behavior = 'follow' }) => {
   // Movement logic
   useEffect(() => {
     const moveShiba = () => {
-      if (isSitting && behavior === 'follow') return
-
       let target = behavior === 'follow' ? cursorPosition : wanderTarget
       const dx = target.x - position.x
       const dy = target.y - position.y
       const distance = Math.sqrt(dx * dx + dy * dy)
 
-      const deadZone = behavior === 'follow' ? 50 : 30
+      const deadZone = behavior === 'follow' ? 20 : 30
       const speed = behavior === 'follow' ? 8 : 2
 
       if (distance > deadZone) {
@@ -136,6 +124,15 @@ const ShibaSprite = ({ behavior = 'follow' }) => {
         }))
       } else {
         setIsMoving(false)
+        
+        // For follow behavior, only sit if we're at the cursor AND mouse hasn't moved recently
+        if (behavior === 'follow') {
+          const timeSinceLastMove = Date.now() - lastMoveTimeRef.current
+          if (timeSinceLastMove > 300) {
+            setIsIdle(true)
+            setIsSitting(true)
+          }
+        }
         
         // For wander behavior, sit sometimes when reaching target
         if (behavior === 'wander' && Math.random() < 0.6) {
@@ -203,15 +200,6 @@ const ShibaSprite = ({ behavior = 'follow' }) => {
     }
   }, [currentAnimation, isSitting])
 
-  // Reset sitting when mouse moves
-  useEffect(() => {
-    if (cursorPosition.x !== 0 || cursorPosition.y !== 0) {
-      if (Date.now() - lastMoveTimeRef.current < 100) {
-        setIsSitting(false)
-        setIsIdle(false)
-      }
-    }
-  }, [cursorPosition])
 
   const spriteStyle = {
     position: 'fixed',
