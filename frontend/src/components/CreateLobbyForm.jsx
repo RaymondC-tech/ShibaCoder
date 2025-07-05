@@ -51,7 +51,8 @@ function CreateLobbyForm({ onCreateRoom }) {
           type: isPrivate ? 'private' : 'public',
           pin: isPrivate ? pin : undefined,
           playerName: playerName.trim(),
-          supabaseId: supabaseLobby.id // Include Supabase ID for reference
+          supabaseId: supabaseLobby.id,
+          eloRange: eloRange
         })
         
         // Store player name for future use
