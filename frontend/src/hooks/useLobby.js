@@ -14,6 +14,8 @@ export const useLobby = () => {
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [testResults, setTestResults] = useState(null)
+  const [gameFinished, setGameFinished] = useState(null)
 
   // Socket event handlers
   useEffect(() => {
@@ -104,6 +106,35 @@ export const useLobby = () => {
       setError(null)
     })
 
+    // Test results
+    socket.on('test_results', (data) => {
+      console.log('Test results received:', data)
+      setTestResults(data)
+      setError(null)
+    })
+
+    // Progress updates
+    socket.on('progress_update', (data) => {
+      console.log('Progress update:', data)
+      // Update players with progress info
+      setPlayers(data.players)
+    })
+
+    // Game finished
+    socket.on('game_finished', (data) => {
+      console.log('Game finished:', data)
+      setGameFinished(data)
+      if (currentLobby) {
+        setCurrentLobby(prev => ({
+          ...prev,
+          status: 'finished',
+          winner: data.winner,
+          final_scores: data.final_scores
+        }))
+      }
+      setError(null)
+    })
+
     // Error handling
     socket.on('error', (data) => {
       console.error('Socket error:', data)
@@ -121,6 +152,9 @@ export const useLobby = () => {
       socket.off('lobby_left')
       socket.off('player_ready_update')
       socket.off('game_start')
+      socket.off('test_results')
+      socket.off('progress_update')
+      socket.off('game_finished')
       socket.off('error')
     }
   }, [socket, currentLobby])
@@ -190,6 +224,23 @@ export const useLobby = () => {
     socket.emit('player_ready')
   }, [socket, connected])
 
+  const submitCode = useCallback((code, language = 'python') => {
+    if (!socket || !connected) {
+      setError('Not connected to server')
+      return
+    }
+
+    if (!code.trim()) {
+      setError('Code cannot be empty')
+      return
+    }
+
+    setError(null)
+    
+    console.log('Submitting code:', { code: code.substring(0, 50) + '...', language })
+    socket.emit('submit_code', { code, language })
+  }, [socket, connected])
+
   return {
     // State
     lobbies,
@@ -199,6 +250,8 @@ export const useLobby = () => {
     loading,
     error,
     connected,
+    testResults,
+    gameFinished,
 
     // Actions
     getLobbyList,
@@ -206,8 +259,11 @@ export const useLobby = () => {
     joinLobby,
     leaveLobby,
     playerReady,
+    submitCode,
 
     // Utilities
     clearError: () => setError(null),
+    clearTestResults: () => setTestResults(null),
+    clearGameFinished: () => setGameFinished(null),
   }
 }

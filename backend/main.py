@@ -438,5 +438,161 @@ async def player_ready(sid, data=None):
     except Exception as e:
         await sio.emit("error", {"message": f"Failed to update ready state: {str(e)}"}, room=sid)
 
+@sio.event
+async def submit_code(sid, data):
+    """Handle code submission and execute tests"""
+    try:
+        if sid not in players or not players[sid]["lobby"]:
+            await sio.emit("error", {"message": "You are not in a lobby"}, room=sid)
+            return
+        
+        lobby_id = players[sid]["lobby"]
+        
+        if lobby_id not in lobbies:
+            await sio.emit("error", {"message": "Lobby not found"}, room=sid)
+            return
+        
+        lobby = lobbies[lobby_id]
+        
+        # Check if game is in progress
+        if lobby["status"] != "playing":
+            await sio.emit("error", {"message": "Game is not in progress"}, room=sid)
+            return
+        
+        # Get submitted code
+        submitted_code = data.get("code", "").strip()
+        language = data.get("language", "python")
+        
+        if not submitted_code:
+            await sio.emit("error", {"message": "Code cannot be empty"}, room=sid)
+            return
+        
+        # Find player in lobby and update their code
+        player_found = False
+        for player in lobby["players"]:
+            if player["id"] == sid:
+                player["code"] = submitted_code
+                player["last_submission"] = time.time()
+                player_found = True
+                break
+        
+        if not player_found:
+            await sio.emit("error", {"message": "Player not found in lobby"}, room=sid)
+            return
+        
+        player_name = players[sid]["name"]
+        print(f"{player_name} submitted code in lobby {lobby_id}")
+        
+        # TODO: Replace with actual Judge0 API call
+        # For now, use fake test execution
+        test_results = run_fake_tests(submitted_code, lobby["problem"]["id"])
+        
+        # Update player progress
+        for player in lobby["players"]:
+            if player["id"] == sid:
+                player["tests_passed"] = test_results["passed"]
+                player["total_tests"] = test_results["total"]
+                player["completed"] = test_results["completed"]
+                break
+        
+        # Send test results to submitting player
+        await sio.emit("test_results", {
+            "passed": test_results["passed"],
+            "total": test_results["total"],
+            "completed": test_results["completed"],
+            "runtime": test_results["runtime"],
+            "errors": test_results.get("errors", [])
+        }, room=sid)
+        
+        # Broadcast progress update to all players in lobby
+        await sio.emit("progress_update", {
+            "players": [{
+                "name": p["name"],
+                "tests_passed": p.get("tests_passed", 0),
+                "total_tests": p.get("total_tests", 5),
+                "completed": p.get("completed", False)
+            } for p in lobby["players"]]
+        }, room=lobby_id)
+        
+        # Check for winner
+        if test_results["completed"]:
+            lobby["status"] = "finished"
+            lobby["ended_at"] = time.time()
+            lobby["winner"] = player_name
+            
+            # Calculate final scores
+            final_scores = []
+            for p in lobby["players"]:
+                final_scores.append({
+                    "name": p["name"],
+                    "tests_passed": p.get("tests_passed", 0),
+                    "total_tests": p.get("total_tests", 5),
+                    "completed": p.get("completed", False),
+                    "completion_time": p.get("last_submission", 0) - lobby.get("started_at", 0) if p.get("completed") else None
+                })
+            
+            await sio.emit("game_finished", {
+                "winner": player_name,
+                "winner_id": sid,
+                "final_scores": final_scores,
+                "game_duration": lobby["ended_at"] - lobby["started_at"]
+            }, room=lobby_id)
+            
+            print(f"Game finished in lobby {lobby_id}. Winner: {player_name}")
+        
+    except Exception as e:
+        await sio.emit("error", {"message": f"Failed to submit code: {str(e)}"}, room=sid)
+
+def run_fake_tests(code: str, problem_id: str = "two-sum") -> dict:
+    """Simulate code execution and return fake test results"""
+    # Simulate processing time
+    time.sleep(0.1)
+    
+    # Simple heuristic for fake results based on code quality
+    code_length = len(code.strip())
+    has_return = "return" in code
+    has_loop = any(keyword in code for keyword in ["for", "while"])
+    has_function = "def " in code
+    
+    # Scoring based on code characteristics
+    score = 0
+    if code_length > 50: score += 1
+    if has_return: score += 2
+    if has_loop: score += 1
+    if has_function: score += 1
+    if code_length > 100: score += 1
+    
+    # Add some randomness
+    random_factor = random.random()
+    
+    if score >= 4 and random_factor > 0.2:
+        passed_count = 5  # All tests pass
+    elif score >= 3 and random_factor > 0.3:
+        passed_count = random.randint(3, 4)
+    elif score >= 2:
+        passed_count = random.randint(1, 3)
+    else:
+        passed_count = random.randint(0, 2)
+    
+    total_tests = 5
+    passed_count = min(passed_count, total_tests)
+    
+    errors = []
+    if passed_count < total_tests:
+        if not has_return:
+            errors.append("Function must return a value")
+        if passed_count == 0:
+            errors.append("No test cases passed")
+        elif passed_count < 3:
+            errors.append(f"Only {passed_count} out of {total_tests} test cases passed")
+    
+    return {
+        "passed": passed_count,
+        "total": total_tests,
+        "completed": passed_count == total_tests,
+        "runtime": random.randint(50, 300),  # Fake runtime in ms
+        "errors": errors
+    }
+
 # Mount Socket.IO app
 socket_app = socketio.ASGIApp(sio, app)
