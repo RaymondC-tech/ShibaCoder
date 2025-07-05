@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import './Navbar.css'
 
 function Navbar() {
   return (
@@ -26,6 +27,15 @@ function Navbar() {
               style={{ height: '32px' }}
             >
               About
+            </button>
+          </Link>
+          <Link to="/daily">
+            <button 
+              type="button" 
+              className="nes-btn is-warning text-xs px-4 py-1 daily-glow"
+              style={{ height: '32px' }}
+            >
+              ✨ Daily
             </button>
           </Link>
           <Link to="/leaderboard">
