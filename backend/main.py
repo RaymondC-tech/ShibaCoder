@@ -36,6 +36,19 @@ def validate_pin(pin: str) -> bool:
     """Validate 4-digit pin format"""
     return pin.isdigit() and len(pin) == 4
 
+async def broadcast_lobby_list_update():
+    """Broadcast updated lobby list to all connected clients"""
+    try:
+        # Get the current lobby list (page 1, no search)
+        lobby_data = get_public_lobbies(search="", page=1)
+        
+        # Broadcast to all connected clients
+        await sio.emit("lobby_list_update", lobby_data)
+        
+        print(f"Broadcasted lobby list update: {len(lobby_data['lobbies'])} lobbies")
+    except Exception as e:
+        print(f"Failed to broadcast lobby list update: {e}")
+
 def get_public_lobbies(search: str = "", page: int = 1, per_page: int = 4) -> Dict:
     """Get paginated list of public lobbies with search"""
     # Filter public lobbies in waiting status
@@ -122,6 +135,8 @@ async def disconnect(sid):
                 if len(lobby["players"]) == 0:
                     del lobbies[lobby_id]
                     print(f"Lobby {lobby_id} deleted - no players remaining")
+                    # Broadcast lobby list update
+                    await broadcast_lobby_list_update()
                 else:
                     # Notify remaining players
                     await sio.emit("player_left", {
@@ -195,6 +210,9 @@ async def create_lobby(sid, data):
             "lobbyId": lobby_id,
             "lobbyData": lobbies[lobby_id]
         }, room=sid)
+        
+        # Broadcast lobby list update to all connected clients
+        await broadcast_lobby_list_update()
         
     except Exception as e:
         await sio.emit("error", {"message": f"Failed to create lobby: {str(e)}"}, room=sid)
@@ -298,6 +316,9 @@ async def join_lobby(sid, data):
             "players": lobby["players"]
         }, room=lobby_id)
         
+        # Broadcast lobby list update since player count changed
+        await broadcast_lobby_list_update()
+        
         # If lobby is now full, could potentially start game here
         if len(lobby["players"]) == lobby["maxPlayers"]:
             print(f"Lobby {lobby_id} is now full ({len(lobby['players'])}/{lobby['maxPlayers']})")
@@ -341,6 +362,8 @@ async def leave_lobby(sid, data=None):
         if len(lobby["players"]) == 0:
             del lobbies[lobby_id]
             print(f"Lobby {lobby_id} deleted - no players remaining")
+            # Broadcast lobby list update
+            await broadcast_lobby_list_update()
         else:
             # Notify remaining players
             await sio.emit("player_left", {
@@ -434,6 +457,9 @@ async def player_ready(sid, data=None):
                 } for p in lobby["players"]],
                 "timeLimit": game_problem["timeLimit"]
             }, room=lobby_id)
+            
+            # Broadcast lobby list update since game started (lobby no longer visible in waiting list)
+            await broadcast_lobby_list_update()
         
     except Exception as e:
         await sio.emit("error", {"message": f"Failed to update ready state: {str(e)}"}, room=sid)

@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-import { SocketProvider } from './hooks/useSocket.js'
+import { SocketProvider } from './hooks/useSocket.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

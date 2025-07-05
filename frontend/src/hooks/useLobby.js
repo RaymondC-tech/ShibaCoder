@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSocket } from './useSocket'
+import { useSocket } from './useSocket.jsx'
 
 export const useLobby = () => {
   const { socket, connected } = useSocket()
@@ -135,6 +135,13 @@ export const useLobby = () => {
       setError(null)
     })
 
+    // Real-time lobby list updates
+    socket.on('lobby_list_update', (data) => {
+      console.log('Received real-time lobby list update:', data)
+      setLobbies(data.lobbies)
+      setPagination(data.pagination)
+    })
+
     // Error handling
     socket.on('error', (data) => {
       console.error('Socket error:', data)
@@ -155,6 +162,7 @@ export const useLobby = () => {
       socket.off('test_results')
       socket.off('progress_update')
       socket.off('game_finished')
+      socket.off('lobby_list_update')
       socket.off('error')
     }
   }, [socket, currentLobby])
