@@ -1,21 +1,34 @@
 import { useState } from 'react'
 import { sounds } from '../utils/sounds'
+import { useLobby } from '../hooks/useLobby'
 
 function CreateLobbyForm({ onCreateRoom }) {
-  const [name, setName] = useState('')
+  const [playerName, setPlayerName] = useState('')
   const [lobbyName, setLobbyName] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
   const [pin, setPin] = useState('')
 
+  const { createLobby, error, connected } = useLobby()
+
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (name.trim() && lobbyName.trim() && (!isPrivate || pin.length === 4)) {
+    if (playerName.trim() && lobbyName.trim() && (!isPrivate || pin.length === 4)) {
       sounds.buttonClick()
-      const roomCode = Math.floor(1000 + Math.random() * 9000).toString()
+      
+      // Create lobby via Socket.IO
+      createLobby({
+        name: lobbyName.trim(),
+        type: isPrivate ? 'private' : 'public',
+        pin: isPrivate ? pin : undefined
+      })
+      
+      // Store player name for future use
+      localStorage.setItem('shibacoder_player_name', playerName.trim())
+      
+      // Call the original callback (for UI state management)
       onCreateRoom({
-        name,
-        lobbyName,
-        roomCode,
+        playerName: playerName.trim(),
+        lobbyName: lobbyName.trim(),
         isPrivate,
         pin: isPrivate ? pin : null
       })
@@ -33,6 +46,20 @@ function CreateLobbyForm({ onCreateRoom }) {
         />
         <p className="text-xs">Create your coding battle arena!</p>
       </div>
+
+      {/* Connection Status */}
+      {!connected && (
+        <div className="nes-container is-error mb-4">
+          <p className="text-xs">⚠️ Not connected to server</p>
+        </div>
+      )}
+
+      {/* Error Display */}
+      {error && (
+        <div className="nes-container is-error mb-4">
+          <p className="text-xs">❌ {error}</p>
+        </div>
+      )}
       
       <div className="nes-field">
         <label htmlFor="name_field" className="text-xs block">
@@ -46,10 +73,11 @@ function CreateLobbyForm({ onCreateRoom }) {
           id="name_field"
           className="nes-input"
           placeholder="Enter your name..."
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={playerName}
+          onChange={(e) => setPlayerName(e.target.value)}
           maxLength={12}
           required
+          disabled={!connected}
         />
       </div>
 
@@ -66,6 +94,7 @@ function CreateLobbyForm({ onCreateRoom }) {
           onChange={(e) => setLobbyName(e.target.value)}
           maxLength={25}
           required
+          disabled={!connected}
         />
       </div>
 
@@ -80,6 +109,7 @@ function CreateLobbyForm({ onCreateRoom }) {
               setIsPrivate(e.target.checked)
               if (!e.target.checked) setPin('')
             }}
+            disabled={!connected}
           />
           <span>Make this lobby private</span>
         </label>
@@ -99,6 +129,7 @@ function CreateLobbyForm({ onCreateRoom }) {
               maxLength={4}
               style={{ fontSize: '20px', letterSpacing: '12px', fontFamily: 'monospace' }}
               required={isPrivate}
+              disabled={!connected}
             />
           </div>
         )}
@@ -106,8 +137,8 @@ function CreateLobbyForm({ onCreateRoom }) {
 
       <button
         type="submit"
-        className={`nes-btn ${(name.trim() && lobbyName.trim() && (!isPrivate || pin.length === 4)) ? 'is-primary' : 'is-disabled'} w-full pixel-shadow`}
-        disabled={!name.trim() || !lobbyName.trim() || (isPrivate && pin.length !== 4)}
+        className={`nes-btn ${(playerName.trim() && lobbyName.trim() && (!isPrivate || pin.length === 4) && connected) ? 'is-primary' : 'is-disabled'} w-full pixel-shadow`}
+        disabled={!playerName.trim() || !lobbyName.trim() || (isPrivate && pin.length !== 4) || !connected}
       >
         Create Lobby
       </button>
