@@ -103,7 +103,33 @@ async def connect(sid, environ=None):
 @sio.event
 async def disconnect(sid):
     print(f"Client {sid} disconnected")
+    
+    # Handle player leaving lobby on disconnect
     if sid in players:
+        player = players[sid]
+        if player["lobby"]:
+            lobby_id = player["lobby"]
+            if lobby_id in lobbies:
+                lobby = lobbies[lobby_id]
+                player_name = player["name"]
+                
+                # Remove player from lobby
+                lobby["players"] = [p for p in lobby["players"] if p["id"] != sid]
+                
+                print(f"{player_name} disconnected from lobby '{lobby['name']}' ({lobby_id})")
+                
+                # If lobby is empty, delete it
+                if len(lobby["players"]) == 0:
+                    del lobbies[lobby_id]
+                    print(f"Lobby {lobby_id} deleted - no players remaining")
+                else:
+                    # Notify remaining players
+                    await sio.emit("player_left", {
+                        "playerName": player_name,
+                        "playerCount": len(lobby["players"]),
+                        "players": lobby["players"]
+                    }, room=lobby_id)
+        
         del players[sid]
 
 @sio.event
@@ -194,6 +220,137 @@ async def get_lobby_list(sid, data):
         
     except Exception as e:
         await sio.emit("error", {"message": f"Failed to get lobby list: {str(e)}"}, room=sid)
+
+@sio.event
+async def join_lobby(sid, data):
+    """Join an existing lobby"""
+    try:
+        # Validate required fields
+        lobby_id = data.get("lobbyId", "").strip()
+        pin = data.get("pin", "").strip()
+        
+        if not lobby_id:
+            await sio.emit("error", {"message": "Lobby ID is required"}, room=sid)
+            return
+        
+        # Check if lobby exists
+        if lobby_id not in lobbies:
+            await sio.emit("error", {"message": "Lobby not found"}, room=sid)
+            return
+        
+        lobby = lobbies[lobby_id]
+        
+        # Check if lobby is full
+        if len(lobby["players"]) >= lobby["maxPlayers"]:
+            await sio.emit("error", {"message": "Lobby is full"}, room=sid)
+            return
+        
+        # Check if game already started
+        if lobby["status"] != "waiting":
+            await sio.emit("error", {"message": "Game already in progress"}, room=sid)
+            return
+        
+        # Check if player already in a lobby
+        if players[sid]["lobby"]:
+            await sio.emit("error", {"message": "You are already in a lobby"}, room=sid)
+            return
+        
+        # Verify pin for private lobbies
+        if lobby["type"] == "private":
+            if not pin:
+                await sio.emit("error", {"message": "Pin is required for private lobbies"}, room=sid)
+                return
+            if pin != lobby["pin"]:
+                await sio.emit("error", {"message": "Incorrect pin"}, room=sid)
+                return
+        
+        # Get player name or generate one
+        player_name = players[sid].get("name") or f"Player{sid[:8]}"
+        
+        # Add player to lobby
+        lobby["players"].append({
+            "id": sid,
+            "name": player_name,
+            "ready": False
+        })
+        
+        # Update player info
+        players[sid]["name"] = player_name
+        players[sid]["lobby"] = lobby_id
+        
+        # Join Socket.IO room
+        await sio.enter_room(sid, lobby_id)
+        
+        print(f"{player_name} joined lobby '{lobby['name']}' ({lobby_id})")
+        
+        # Send confirmation to joining player
+        await sio.emit("lobby_joined", {
+            "lobbyId": lobby_id,
+            "lobbyData": lobby,
+            "playerCount": len(lobby["players"])
+        }, room=sid)
+        
+        # Notify all players in lobby about the new player
+        await sio.emit("player_joined", {
+            "playerName": player_name,
+            "playerCount": len(lobby["players"]),
+            "maxPlayers": lobby["maxPlayers"],
+            "players": lobby["players"]
+        }, room=lobby_id)
+        
+        # If lobby is now full, could potentially start game here
+        if len(lobby["players"]) == lobby["maxPlayers"]:
+            print(f"Lobby {lobby_id} is now full ({len(lobby['players'])}/{lobby['maxPlayers']})")
+        
+    except Exception as e:
+        await sio.emit("error", {"message": f"Failed to join lobby: {str(e)}"}, room=sid)
+
+@sio.event
+async def leave_lobby(sid, data=None):
+    """Leave current lobby"""
+    try:
+        if sid not in players or not players[sid]["lobby"]:
+            await sio.emit("error", {"message": "You are not in a lobby"}, room=sid)
+            return
+        
+        lobby_id = players[sid]["lobby"]
+        
+        if lobby_id not in lobbies:
+            # Cleanup orphaned player reference
+            players[sid]["lobby"] = None
+            return
+        
+        lobby = lobbies[lobby_id]
+        player_name = players[sid]["name"]
+        
+        # Remove player from lobby
+        lobby["players"] = [p for p in lobby["players"] if p["id"] != sid]
+        
+        # Update player info
+        players[sid]["lobby"] = None
+        
+        # Leave Socket.IO room
+        await sio.leave_room(sid, lobby_id)
+        
+        print(f"{player_name} left lobby '{lobby['name']}' ({lobby_id})")
+        
+        # Send confirmation to leaving player
+        await sio.emit("lobby_left", {"message": "Left lobby successfully"}, room=sid)
+        
+        # If lobby is empty, delete it
+        if len(lobby["players"]) == 0:
+            del lobbies[lobby_id]
+            print(f"Lobby {lobby_id} deleted - no players remaining")
+        else:
+            # Notify remaining players
+            await sio.emit("player_left", {
+                "playerName": player_name,
+                "playerCount": len(lobby["players"]),
+                "players": lobby["players"]
+            }, room=lobby_id)
+        
+    except Exception as e:
+        await sio.emit("error", {"message": f"Failed to leave lobby: {str(e)}"}, room=sid)
 
 # Mount Socket.IO app
 socket_app = socketio.ASGIApp(sio, app)
