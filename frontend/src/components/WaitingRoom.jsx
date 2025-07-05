@@ -1,14 +1,23 @@
 import { Browser } from 'react-kawaii'
 import { sounds } from '../utils/sounds'
+import { useLobby } from '../hooks/useLobby'
 
 function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobby, onGameStart }) {
+  const { playerReady } = useLobby()
+  
   const currentPlayer = players.find(p => p.name === playerName)
   const opponent = players.find(p => p.name !== playerName)
   const isFull = players.length === lobby.maxPlayers
+  const allReady = players.length === 2 && players.every(p => p.ready)
 
   const handleLeaveLobby = () => {
     sounds.buttonClick()
     onLeaveLobby()
+  }
+
+  const handlePlayerReady = () => {
+    sounds.buttonClick()
+    playerReady()
   }
 
   const handleGameStart = () => {
@@ -58,15 +67,28 @@ function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobb
             
             <div className="grid grid-cols-2 gap-4">
               {/* Player 1 */}
-              <div className="nes-container bg-blue-50">
+              <div className={`nes-container ${currentPlayer?.ready ? 'bg-green-50' : 'bg-blue-50'}`}>
                 <div className="text-center">
                   {currentPlayer ? (
                     <>
                       <div className="nes-avatar is-rounded mb-2">
-                        <Browser size={60} mood="happy" color="#92C5F7" />
+                        <Browser 
+                          size={60} 
+                          mood={currentPlayer.ready ? "excited" : "happy"} 
+                          color={currentPlayer.ready ? "#22C55E" : "#92C5F7"} 
+                        />
                       </div>
                       <p className="text-sm font-bold text-blue-900">{currentPlayer.name}</p>
                       <p className="text-xs text-blue-600">You</p>
+                      {currentPlayer.ready ? (
+                        <div className="nes-badge mt-2">
+                          <span className="is-success text-xs">Ready!</span>
+                        </div>
+                      ) : (
+                        <div className="nes-badge mt-2">
+                          <span className="is-warning text-xs">Not Ready</span>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <>
@@ -80,15 +102,28 @@ function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobb
               </div>
 
               {/* Player 2 */}
-              <div className="nes-container bg-pink-50">
+              <div className={`nes-container ${opponent?.ready ? 'bg-green-50' : 'bg-pink-50'}`}>
                 <div className="text-center">
                   {opponent ? (
                     <>
                       <div className="nes-avatar is-rounded mb-2">
-                        <Browser size={60} mood="excited" color="#FDB7DA" />
+                        <Browser 
+                          size={60} 
+                          mood={opponent.ready ? "excited" : "happy"} 
+                          color={opponent.ready ? "#22C55E" : "#FDB7DA"} 
+                        />
                       </div>
                       <p className="text-sm font-bold text-pink-900">{opponent.name}</p>
                       <p className="text-xs text-pink-600">Opponent</p>
+                      {opponent.ready ? (
+                        <div className="nes-badge mt-2">
+                          <span className="is-success text-xs">Ready!</span>
+                        </div>
+                      ) : (
+                        <div className="nes-badge mt-2">
+                          <span className="is-warning text-xs">Not Ready</span>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <>
@@ -116,11 +151,17 @@ function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobb
                   }
                 </p>
               </>
-            ) : (
+            ) : allReady ? (
               <>
                 <Browser size={120} mood="excited" color="#22C55E" />
-                <p className="text-sm font-bold text-green-600 mt-4">Ready to battle! 🔥</p>
-                <p className="text-xs text-gray-600 mt-2">Both players are in the lobby</p>
+                <p className="text-sm font-bold text-green-600 mt-4">🚀 Starting game...</p>
+                <p className="text-xs text-gray-600 mt-2">Both players are ready!</p>
+              </>
+            ) : (
+              <>
+                <Browser size={120} mood="happy" color="#FDB7DA" />
+                <p className="text-sm font-bold mt-4">Waiting for players to ready up...</p>
+                <p className="text-xs text-gray-600 mt-2">Click "Ready" when you're prepared to battle!</p>
               </>
             )}
           </div>
@@ -136,15 +177,26 @@ function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobb
               Leave Lobby
             </button>
             
-            {/* Demo start button - in real implementation, this would be automatic */}
-            {isFull && (
+            {/* Ready button - only show when lobby is full and player is not ready */}
+            {isFull && currentPlayer && !currentPlayer.ready && (
               <button
                 type="button"
-                className="nes-btn is-primary text-xs"
-                onClick={handleGameStart}
+                className="nes-btn is-success text-xs"
+                onClick={handlePlayerReady}
                 disabled={!connected}
               >
-                Start Game (Demo)
+                Ready Up!
+              </button>
+            )}
+
+            {/* Show ready status when player is ready */}
+            {isFull && currentPlayer && currentPlayer.ready && !allReady && (
+              <button
+                type="button"
+                className="nes-btn is-disabled text-xs"
+                disabled
+              >
+                Waiting for opponent...
               </button>
             )}
           </div>

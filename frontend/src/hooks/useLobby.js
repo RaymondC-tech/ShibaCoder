@@ -77,6 +77,19 @@ export const useLobby = () => {
       setError(null)
     })
 
+    // Player ready updates
+    socket.on('player_ready_update', (data) => {
+      console.log('Player ready update:', data)
+      setPlayers(data.players)
+      // Update current lobby with latest player ready states
+      if (currentLobby) {
+        setCurrentLobby(prev => ({
+          ...prev,
+          players: data.players
+        }))
+      }
+    })
+
     // Game start event
     socket.on('game_start', (data) => {
       console.log('Game started:', data)
@@ -84,7 +97,8 @@ export const useLobby = () => {
         setCurrentLobby(prev => ({
           ...prev,
           status: 'playing',
-          problem: data.problem
+          problem: data.problem,
+          timeLimit: data.timeLimit
         }))
       }
       setError(null)
@@ -105,6 +119,7 @@ export const useLobby = () => {
       socket.off('player_joined')
       socket.off('player_left')
       socket.off('lobby_left')
+      socket.off('player_ready_update')
       socket.off('game_start')
       socket.off('error')
     }
@@ -163,6 +178,18 @@ export const useLobby = () => {
     socket.emit('leave_lobby')
   }, [socket, connected])
 
+  const playerReady = useCallback(() => {
+    if (!socket || !connected) {
+      setError('Not connected to server')
+      return
+    }
+
+    setError(null)
+    
+    console.log('Player ready')
+    socket.emit('player_ready')
+  }, [socket, connected])
+
   return {
     // State
     lobbies,
@@ -178,6 +205,7 @@ export const useLobby = () => {
     createLobby,
     joinLobby,
     leaveLobby,
+    playerReady,
 
     // Utilities
     clearError: () => setError(null),

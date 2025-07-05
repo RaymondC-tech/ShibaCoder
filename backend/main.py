@@ -352,5 +352,91 @@ async def leave_lobby(sid, data=None):
     except Exception as e:
         await sio.emit("error", {"message": f"Failed to leave lobby: {str(e)}"}, room=sid)
 
+@sio.event
+async def player_ready(sid, data=None):
+    """Handle player ready state"""
+    try:
+        if sid not in players or not players[sid]["lobby"]:
+            await sio.emit("error", {"message": "You are not in a lobby"}, room=sid)
+            return
+        
+        lobby_id = players[sid]["lobby"]
+        
+        if lobby_id not in lobbies:
+            await sio.emit("error", {"message": "Lobby not found"}, room=sid)
+            return
+        
+        lobby = lobbies[lobby_id]
+        
+        # Check if lobby has enough players
+        if len(lobby["players"]) < 2:
+            await sio.emit("error", {"message": "Need 2 players to start game"}, room=sid)
+            return
+        
+        # Find and update player ready state
+        player_found = False
+        for player in lobby["players"]:
+            if player["id"] == sid:
+                player["ready"] = True
+                player_found = True
+                break
+        
+        if not player_found:
+            await sio.emit("error", {"message": "Player not found in lobby"}, room=sid)
+            return
+        
+        player_name = players[sid]["name"]
+        print(f"{player_name} is ready in lobby {lobby_id}")
+        
+        # Broadcast ready state to all players in lobby
+        await sio.emit("player_ready_update", {
+            "playerName": player_name,
+            "players": [{
+                "id": p["id"],
+                "name": p["name"], 
+                "ready": p["ready"]
+            } for p in lobby["players"]]
+        }, room=lobby_id)
+        
+        # Check if all players are ready
+        all_ready = all(player["ready"] for player in lobby["players"])
+        
+        if all_ready and len(lobby["players"]) == lobby["maxPlayers"]:
+            # Start the game!
+            lobby["status"] = "playing"
+            lobby["started_at"] = time.time()
+            
+            print(f"Game started in lobby {lobby_id} - all players ready!")
+            
+            # Add the hardcoded Two Sum problem
+            game_problem = {
+                "id": "two-sum",
+                "title": "Two Sum", 
+                "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+                "examples": [
+                    {
+                        "input": "nums = [2,7,11,15], target = 9",
+                        "output": "[0,1]",
+                        "explanation": "Because nums[0] + nums[1] == 9, we return [0, 1]."
+                    }
+                ],
+                "template": """def two_sum(nums, target):
+    # Write your solution here
+    pass""",
+                "timeLimit": 300  # 5 minutes
+            }
+            
+            await sio.emit("game_start", {
+                "problem": game_problem,
+                "players": [{
+                    "id": p["id"],
+                    "name": p["name"]
+                } for p in lobby["players"]],
+                "timeLimit": game_problem["timeLimit"]
+            }, room=lobby_id)
+        
+    except Exception as e:
+        await sio.emit("error", {"message": f"Failed to update ready state: {str(e)}"}, room=sid)
+
 # Mount Socket.IO app
 socket_app = socketio.ASGIApp(sio, app)
