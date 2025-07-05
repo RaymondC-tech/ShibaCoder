@@ -10,3 +10,33 @@ body {
   padding: 0;
   background-color: #EBC697;
 }
+
+/* 🎯 Enhanced ELO Range Dropdown Styling for Demo */
+.nes-select select {
+  background-color: white;
+  border: 2px solid #212529;
+}
+
+.nes-select select option[value="easy"] {
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  color: #155724;
+  font-weight: bold;
+}
+
+.nes-select select option[value="medium"] {
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  color: #856404;
+  font-weight: bold;
+}
+
+.nes-select select option[value="hard"] {
+  background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+  color: #721c24;
+  font-weight: bold;
+}
+
+/* Add hover effects for better UX */
+.nes-select select:focus {
+  outline: 3px solid #007bff;
+  outline-offset: 2px;
+}
