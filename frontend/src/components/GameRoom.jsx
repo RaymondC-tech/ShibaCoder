@@ -4,6 +4,7 @@ import { useLobby } from '../hooks/useLobby';
 import AttackQuestions from './AttackQuestions';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { sounds } from '../utils/sounds';
+import EducationModal from './EducationModal';
 import './GameRoom.css';
 
 function GameRoom({ lobby, players, playerName }) {
@@ -22,6 +23,15 @@ function GameRoom({ lobby, players, playerName }) {
   // Attack system state (NEW - doesn't affect existing logic)
   const [activeAttackEffect, setActiveAttackEffect] = useState(null);
   
+  // Education modal state (ISOLATED - doesn't affect game logic)
+  const [showEducationModal, setShowEducationModal] = useState(false);
+  
+  // Spectator emoji reactions (NEW - isolated)
+  const [spectatorEmojis, setSpectatorEmojis] = useState([]);
+  
+  // Live code broadcasting (NEW - isolated)
+  const [codeUpdateTimeout, setCodeUpdateTimeout] = useState(null);
+  
   // Set game start time when lobby status becomes 'playing'
   useEffect(() => {
     if (lobby?.status === 'playing' && !gameStartTime) {
@@ -38,6 +48,15 @@ function GameRoom({ lobby, players, playerName }) {
       return () => clearInterval(interval);
     }
   }, [gameStartTime, lobby?.status]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (codeUpdateTimeout) {
+        clearTimeout(codeUpdateTimeout);
+      }
+    };
+  }, [codeUpdateTimeout]);
 
   // Attack system handlers (NEW - isolated from existing logic)
   useEffect(() => {
@@ -71,10 +90,31 @@ function GameRoom({ lobby, players, playerName }) {
       }, duration);
     };
 
+    const handleSpectatorEmojiReaction = (data) => {
+      console.log('🎉 Spectator emoji reaction:', data.emoji, 'from', data.spectatorName);
+      
+      // Add emoji to display
+      const emojiId = Date.now() + Math.random();
+      setSpectatorEmojis(prev => [...prev, {
+        id: emojiId,
+        emoji: data.emoji,
+        spectatorName: data.spectatorName,
+        x: Math.random() * 80 + 10, // Random position 10-90%
+        y: Math.random() * 80 + 10
+      }]);
+      
+      // Remove emoji after 4 seconds
+      setTimeout(() => {
+        setSpectatorEmojis(prev => prev.filter(e => e.id !== emojiId));
+      }, 4000);
+    };
+
     on('attack_received', handleAttackReceived);
+    on('spectator_emoji_reaction', handleSpectatorEmojiReaction);
     
     return () => {
       off('attack_received', handleAttackReceived);
+      off('spectator_emoji_reaction', handleSpectatorEmojiReaction);
     };
   }, [on, off]);
 
@@ -85,6 +125,28 @@ function GameRoom({ lobby, players, playerName }) {
     }
   };
 
+  // Debounced code broadcasting to spectators (NEW - doesn't affect game logic)
+  const broadcastCodeUpdate = (newCode) => {
+    if (lobby?.status === 'playing' && !gameFinished) {
+      // Clear existing timeout
+      if (codeUpdateTimeout) {
+        clearTimeout(codeUpdateTimeout);
+      }
+      
+      // Set new timeout to broadcast after 300ms of no typing
+      const timeout = setTimeout(() => {
+        emit('code_update', { code: newCode });
+      }, 300);
+      
+      setCodeUpdateTimeout(timeout);
+    }
+  };
+
+  const handleCodeChange = (newCode) => {
+    setCode(newCode);
+    broadcastCodeUpdate(newCode); // Broadcast to spectators
+  };
+
   // Debug logging
   console.log('GameRoom state:', {
     lobby,
@@ -93,6 +155,18 @@ function GameRoom({ lobby, players, playerName }) {
     status: lobby?.status,
     gameStartTime
   });
+
+  // Debug winner comparison
+  if (gameFinished) {
+    console.log('🏆 WINNER DEBUG:', {
+      'gameFinished.winner': gameFinished.winner,
+      'playerName': playerName,
+      'comparison': gameFinished.winner === playerName,
+      'winnerTrimmed': gameFinished.winner?.trim(),
+      'playerNameTrimmed': playerName?.trim(),
+      'normalizedComparison': gameFinished.winner?.trim().toLowerCase() === playerName?.trim().toLowerCase()
+    });
+  }
 
   // Calculate progress for both players
   const currentPlayer = players.find(p => p.name === playerName);
@@ -184,14 +258,14 @@ function GameRoom({ lobby, players, playerName }) {
       </div>
 
       {gameFinished && (
-        <div className={`nes-container is-centered ${gameFinished.winner === playerName ? 'winner-banner' : 'loser-banner'}`}>
-          {gameFinished.winner === playerName ? (
+        <div className={`nes-container is-centered ${gameFinished.winner?.trim().toLowerCase() === playerName?.trim().toLowerCase() ? 'winner-banner' : 'loser-banner'}`}>
+          {gameFinished.winner?.trim().toLowerCase() === playerName?.trim().toLowerCase() ? (
             <h2>🎉 You Won! 🎉</h2>
           ) : (
             <h2>😢 You Lost! Better luck next time! 😢</h2>
           )}
           <p className="text-sm mt-2">
-            {gameFinished.winner === playerName 
+            {gameFinished.winner?.trim().toLowerCase() === playerName?.trim().toLowerCase()
               ? "Congratulations on solving the challenge!" 
               : `${gameFinished.winner} solved it first!`
             }
@@ -251,7 +325,7 @@ function GameRoom({ lobby, players, playerName }) {
               language="python"
               theme="vs-dark"
               value={code}
-              onChange={setCode}
+              onChange={handleCodeChange}
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,
@@ -270,6 +344,43 @@ function GameRoom({ lobby, players, playerName }) {
           </button>
         </div>
       </div>
+
+      {/* Floating Education Button - doesn't affect existing layout */}
+      <button
+        className="nes-btn is-warning text-xs fixed bottom-6 right-6 z-40 pixel-shadow"
+        onClick={() => setShowEducationModal(true)}
+        style={{ 
+          width: '60px', 
+          height: '60px',
+          borderRadius: '50%',
+          fontSize: '20px'
+        }}
+        title="Learn CS Fundamentals"
+      >
+        📚
+      </button>
+
+      {/* Education Modal - completely isolated */}
+      <EducationModal 
+        isOpen={showEducationModal}
+        onClose={() => setShowEducationModal(false)}
+      />
+
+      {/* Spectator Emoji Overlay */}
+      {spectatorEmojis.map((emojiData) => (
+        <div
+          key={emojiData.id}
+          className="fixed pointer-events-none z-50 text-4xl animate-bounce"
+          style={{
+            left: `${emojiData.x}%`,
+            top: `${emojiData.y}%`,
+            animation: 'bounce 1s infinite, fadeIn 4s ease-out'
+          }}
+          title={`From ${emojiData.spectatorName}`}
+        >
+          {emojiData.emoji}
+        </div>
+      ))}
     </div>
   );
 }

@@ -22,7 +22,7 @@ function Navbar() {
   const eloStyle = getELOColor(playerELO)
   return (
     <nav className="bg-shiba-bg border-b-4 border-amber-700 relative z-20">
-      <div className="flex items-center justify-between px-6 py-1">
+      <div className="flex items-center justify-between px-6 py-3">
         <div className="flex items-center gap-3">
           <img 
             src="/logo.svg" 
@@ -45,6 +45,15 @@ function Navbar() {
               style={{ height: '32px' }}
             >
               About
+            </button>
+          </Link>
+          <Link to="/discussion">
+            <button 
+              type="button" 
+              className="nes-btn is-normal text-xs px-4 py-1"
+              style={{ height: '32px' }}
+            >
+              Discussion
             </button>
           </Link>
           <Link to="/daily">
