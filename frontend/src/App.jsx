@@ -4,6 +4,7 @@ import FrontPage from './components/FrontPage'
 import About from './components/About'
 import Leaderboard from './components/Leaderboard'
 import DailyChallenge from './components/DailyChallenge'
+import ShibaCustomization from './components/ShibaCustomization'
 import Navbar from './components/Navbar'
 import LobbyList from './components/LobbyList'
 import CreateLobbyForm from './components/CreateLobbyForm'
@@ -144,6 +145,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/daily" element={<DailyChallenge />} />
+        <Route path="/customize" element={<ShibaCustomization />} />
       </Routes>
     </Router>
   )

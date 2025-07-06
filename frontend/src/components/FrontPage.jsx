@@ -36,13 +36,13 @@ function FrontPage() {
               
               <Link to="/daily" className="w-full">
                 <button type="button" className="nes-btn is-warning w-full daily-glow">
-                  ✨ Daily Challenge ✨
+                  Daily Challenge
                 </button>
               </Link>
               
-              <Link to="/about" className="w-full">
-                <button type="button" className="nes-btn w-full">
-                  About
+              <Link to="/customize" className="w-full">
+                <button type="button" className="nes-btn is-success w-full">
+                  Customize Shiba
                 </button>
               </Link>
             </div>
