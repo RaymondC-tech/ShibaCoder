@@ -5,6 +5,7 @@ import About from './components/About'
 import Leaderboard from './components/Leaderboard'
 import DailyChallenge from './components/DailyChallenge'
 import ShibaCustomization from './components/ShibaCustomization'
+import Rules from './components/Rules'
 
 import Discussion from './components/Discussion'
 
@@ -173,6 +174,7 @@ function App() {
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/daily" element={<DailyChallenge />} />
         <Route path="/customize" element={<ShibaCustomization />} />
+        <Route path="/rules" element={<Rules />} />
       </Routes>
     </Router>
   )

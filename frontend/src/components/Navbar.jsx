@@ -74,13 +74,15 @@ function Navbar() {
               Leaderboard
             </button>
           </Link>
-          <button 
-            type="button" 
-            className="nes-btn is-normal text-xs px-4 py-1"
-            style={{ height: '32px' }}
-          >
-            Rules
-          </button>
+          <Link to="/rules">
+            <button 
+              type="button" 
+              className="nes-btn is-normal text-xs px-4 py-1"
+              style={{ height: '32px' }}
+            >
+              Rules
+            </button>
+          </Link>
           <a 
             href="https://github.com/RaymondC-tech/ShibaCoder" 
             target="_blank" 
