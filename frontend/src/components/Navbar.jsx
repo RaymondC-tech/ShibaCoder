@@ -82,7 +82,7 @@ function Navbar() {
             Rules
           </button>
           <a 
-            href="https://github.com/boshyxd/ShibaCode" 
+            href="https://github.com/RaymondC-tech/ShibaCoder" 
             target="_blank" 
             rel="noopener noreferrer"
             className="nes-btn is-normal text-xs px-4 py-1 inline-flex items-center"
