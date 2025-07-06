@@ -4,6 +4,7 @@ import { useLobby } from '../hooks/useLobby';
 import AttackQuestions from './AttackQuestions';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { sounds } from '../utils/sounds';
+import EducationModal from './EducationModal';
 import './GameRoom.css';
 
 function GameRoom({ lobby, players, playerName }) {
@@ -21,6 +22,9 @@ function GameRoom({ lobby, players, playerName }) {
   
   // Attack system state (NEW - doesn't affect existing logic)
   const [activeAttackEffect, setActiveAttackEffect] = useState(null);
+  
+  // Education modal state (ISOLATED - doesn't affect game logic)
+  const [showEducationModal, setShowEducationModal] = useState(false);
   
   // Set game start time when lobby status becomes 'playing'
   useEffect(() => {
@@ -270,6 +274,27 @@ function GameRoom({ lobby, players, playerName }) {
           </button>
         </div>
       </div>
+
+      {/* Floating Education Button - doesn't affect existing layout */}
+      <button
+        className="nes-btn is-warning text-xs fixed bottom-6 right-6 z-40 pixel-shadow"
+        onClick={() => setShowEducationModal(true)}
+        style={{ 
+          width: '60px', 
+          height: '60px',
+          borderRadius: '50%',
+          fontSize: '20px'
+        }}
+        title="Learn CS Fundamentals"
+      >
+        📚
+      </button>
+
+      {/* Education Modal - completely isolated */}
+      <EducationModal 
+        isOpen={showEducationModal}
+        onClose={() => setShowEducationModal(false)}
+      />
     </div>
   );
 }
