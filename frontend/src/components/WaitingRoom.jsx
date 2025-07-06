@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { sounds } from '../utils/sounds'
 import { useLobby } from '../hooks/useLobby.js'
 import { useWebSocket } from '../hooks/useWebSocket.jsx'
+import CustomShibaAvatar from './CustomShibaAvatar'
 
 function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobby, onGameStart }) {
   if (!lobby) {
@@ -111,12 +112,7 @@ function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobb
                   {currentPlayer ? (
                     <>
                       <div className="mb-2">
-                        <img 
-                          src="/shibaface.svg" 
-                          alt="Player" 
-                          className="w-16 h-16 mx-auto"
-                          style={{ imageRendering: 'pixelated' }}
-                        />
+                        <CustomShibaAvatar size={64} className="mx-auto" />
                       </div>
                       <p className="text-sm font-bold text-blue-900">{currentPlayer.name}</p>
                       <p className="text-xs text-blue-600">You</p>
