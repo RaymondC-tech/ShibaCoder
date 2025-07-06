@@ -17,6 +17,8 @@ export const useLobby = () => {
   const [testResults, setTestResults] = useState(null)
   const [gameFinished, setGameFinished] = useState(null)
   const [currentPlayerName, setCurrentPlayerName] = useState(null)
+  const [isSpectator, setIsSpectator] = useState(false)
+  const [spectatorName, setSpectatorName] = useState(null)
 
   // Socket event handlers
   useEffect(() => {
@@ -87,6 +89,8 @@ export const useLobby = () => {
       setCurrentLobby(null)
       setPlayers([])
       setCurrentPlayerName(null)
+      setIsSpectator(false)  // Reset spectator state
+      setSpectatorName(null)
       setError(null)
     }
 
@@ -153,6 +157,15 @@ export const useLobby = () => {
       setPagination(data.pagination)
     }
 
+    // Spectator events
+    const handleSpectatorJoined = (data) => {
+      console.log('Joined as spectator:', data)
+      setCurrentLobby(data.lobbyData)
+      setPlayers(data.lobbyData.players)
+      setIsSpectator(true)
+      setError(null)
+    }
+
     // Error handling
     const handleError = (data) => {
       console.error('WebSocket error:', data)
@@ -173,6 +186,7 @@ export const useLobby = () => {
     on('progress_update', handleProgressUpdate)
     on('game_finished', handleGameFinished)
     on('lobby_list_update', handleLobbyListUpdate)
+    on('spectator_joined', handleSpectatorJoined)
     on('error', handleError)
 
     // Cleanup listeners
@@ -189,6 +203,7 @@ export const useLobby = () => {
       off('progress_update', handleProgressUpdate)
       off('game_finished', handleGameFinished)
       off('lobby_list_update', handleLobbyListUpdate)
+      off('spectator_joined', handleSpectatorJoined)
       off('error', handleError)
     }
   }, [connected, currentLobby, on, off])
@@ -276,6 +291,24 @@ export const useLobby = () => {
     emit('submit_code', { code, language })
   }, [connected, emit])
 
+  const joinAsSpectator = useCallback((lobbyId, spectatorName = null) => {
+    if (!connected) {
+      setError('Not connected to server')
+      return
+    }
+
+    setError(null)
+    
+    if (!spectatorName) {
+      spectatorName = localStorage.getItem('shibacoder_player_name') || `Spectator${Date.now().toString().slice(-4)}`
+    }
+    
+    setSpectatorName(spectatorName)
+    
+    console.log('Joining as spectator:', { lobbyId, spectatorName })
+    emit('join_as_spectator', { lobbyId, spectatorName })
+  }, [connected, emit])
+
   return {
     // State
     lobbies,
@@ -288,6 +321,8 @@ export const useLobby = () => {
     testResults,
     gameFinished,
     currentPlayerName,
+    isSpectator,
+    spectatorName,
 
     // Actions
     getLobbyList,
@@ -296,6 +331,7 @@ export const useLobby = () => {
     leaveLobby,
     playerReady,
     submitCode,
+    joinAsSpectator,
 
     // Utilities
     clearError: () => setError(null),
