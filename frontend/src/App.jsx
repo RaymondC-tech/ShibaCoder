@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import FrontPage from './components/FrontPage'
 import About from './components/About'
 import Leaderboard from './components/Leaderboard'
@@ -23,7 +23,6 @@ import './App.css'
 
 // Main game component that handles the lobby/game logic
 function GameLobby() {
-  const navigate = useNavigate()
   const [gameState, setGameState] = useState('lobbyList')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [playerName, setPlayerName] = useState('')
@@ -42,12 +41,6 @@ function GameLobby() {
 
   // Watch for lobby state changes to update game state
   useEffect(() => {
-    console.log('App: Lobby state changed:', {
-      currentLobby,
-      status: currentLobby?.status,
-      gameState,
-      isSpectator
-    });
     
     if (currentLobby) {
       if (isSpectator) {
@@ -63,7 +56,6 @@ function GameLobby() {
           }
         }
         else if (currentLobby.status === 'playing') {
-          console.log('App: Setting game state to playing');
           setGameState('playing')
         }
       }
@@ -79,26 +71,15 @@ function GameLobby() {
 
   const handleJoinRoom = (lobbyId, pin, mode) => {
     if (mode === 'spectator') {
-      // Join as spectator
-      console.log('Joining as spectator:', lobbyId)
       joinAsSpectator(lobbyId)
-    } else {
-      // Normal join logic is handled in LobbyList component
-      console.log('Joining lobby:', lobbyId, pin ? 'with PIN' : 'public')
     }
   }
 
   const handleCreateRoom = (lobbyData) => {
-    // Socket.IO create logic is already handled in CreateLobbyForm component
-    // Store player name and close modal
     setPlayerName(lobbyData.playerName)
     setShowCreateModal(false)
-    console.log('Creating lobby:', lobbyData)
   }
 
-  const handleGameStart = () => {
-    setGameState('playing')
-  }
 
   const handleLeaveLobby = () => {
     leaveLobby()
@@ -137,7 +118,6 @@ function GameLobby() {
             connected={connected}
             error={error}
             onLeaveLobby={handleLeaveLobby}
-            onGameStart={handleGameStart}
           />
         )}
         

@@ -13,8 +13,6 @@ function CustomShibaAvatar({ size = 50, className = '', style = {}, colorId = nu
         width: `${size}px`,
         height: `${size}px`,
         imageRendering: 'pixelated',
-        imageRendering: '-moz-crisp-edges',
-        imageRendering: 'crisp-edges',
         ...shibaStyle,
         ...style
       }}

@@ -20,7 +20,6 @@ export const incrementWins = () => {
   localStorage.setItem('playerWins', (currentWins + 1).toString())
   localStorage.setItem('gamesPlayed', (currentGames + 1).toString())
   
-  console.log(`🏆 Player wins increased to: ${currentWins + 1}`)
   return currentWins + 1
 }
 
@@ -31,7 +30,6 @@ export const incrementLosses = () => {
   localStorage.setItem('playerLosses', (currentLosses + 1).toString())
   localStorage.setItem('gamesPlayed', (currentGames + 1).toString())
   
-  console.log(`😢 Player losses increased to: ${currentLosses + 1}`)
   return currentLosses + 1
 }
 
