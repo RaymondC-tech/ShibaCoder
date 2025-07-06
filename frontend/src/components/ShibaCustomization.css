@@ -1,0 +1,194 @@
+.customization-page {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Preview Section */
+.preview-section {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+  flex-shrink: 0;
+}
+
+.preview-section .nes-container {
+  min-width: 350px;
+  position: relative;
+}
+
+.shiba-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 30px 0;
+  min-height: 120px;
+}
+
+.shiba-avatar {
+  width: 120px !important;
+  height: 120px !important;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  transition: filter 0.3s ease;
+  display: block;
+}
+
+.save-btn {
+  margin-top: 20px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.save-success {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  animation: fadeInOut 2s ease-in-out;
+}
+
+.success-text {
+  color: #16a085;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Colors Section */
+.colors-section {
+  flex: 1;
+  margin-bottom: 40px;
+}
+
+.colors-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.color-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  border: 2px solid #333;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 140px;
+  height: 120px;
+}
+
+.color-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.color-card.selected {
+  border-color: #4ade80;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 2px #4ade80;
+}
+
+.color-preview {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+}
+
+.color-preview img {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+.color-name {
+  font-size: 13px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Back Button */
+.back-button-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .customization-page {
+    padding: 15px;
+  }
+  
+  .shiba-avatar {
+    width: 100px !important;
+    height: 100px !important;
+  }
+  
+  .colors-grid {
+    gap: 12px;
+  }
+  
+  .color-card {
+    padding: 12px;
+    width: 120px;
+    height: 100px;
+  }
+  
+  .color-name {
+    font-size: 12px;
+  }
+  
+  .preview-section {
+    margin: 20px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .shiba-avatar {
+    width: 80px !important;
+    height: 80px !important;
+  }
+  
+  .colors-grid {
+    gap: 10px;
+  }
+  
+  .color-card {
+    padding: 10px;
+    width: 100px;
+    height: 90px;
+  }
+  
+  .color-preview img {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* NES.css container overrides */
+.nes-container.with-title > .title {
+  background-color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Animation for save success */
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; }
+  20%, 80% { opacity: 1; }
+}

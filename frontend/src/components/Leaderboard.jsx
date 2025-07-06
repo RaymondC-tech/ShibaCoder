@@ -2,30 +2,31 @@ import { Link } from 'react-router-dom'
 import CloudBackground from './CloudBackground'
 import ShibaSprite from './ShibaSprite'
 import Navbar from './Navbar'
+import CustomShibaAvatar from './CustomShibaAvatar'
 
 function Leaderboard() {
-  // Hardcoded leaderboard data
+  // Hardcoded leaderboard data with randomized Shiba colors
   const leaderboardData = {
     easy: [
-      { rank: 1, name: "ShibaGod", elo: 2999, wins: 420, avatar: "🐕" },
-      { rank: 2, name: "CodeNinja", elo: 2850, wins: 315, avatar: "🥷" },
-      { rank: 3, name: "BugSquasher", elo: 2720, wins: 289, avatar: "🔨" },
-      { rank: 4, name: "LoopMaster", elo: 2650, wins: 256, avatar: "🔄" },
-      { rank: 5, name: "SyntaxKing", elo: 2580, wins: 203, avatar: "👑" }
+      { rank: 1, name: "ShibaG", elo: 2999, wins: 420, shibaColor: "golden" },
+      { rank: 2, name: "CodeN", elo: 2850, wins: 315, shibaColor: "default" },
+      { rank: 3, name: "BugSq", elo: 2720, wins: 289, shibaColor: "green" },
+      { rank: 4, name: "LoopM", elo: 2650, wins: 256, shibaColor: "default" },
+      { rank: 5, name: "SyntaxK", elo: 2580, wins: 203, shibaColor: "purple" }
     ],
     medium: [
-      { rank: 1, name: "AlgoWizard", elo: 4999, wins: 666, avatar: "🧙‍♂️" },
-      { rank: 2, name: "DataStructGuru", elo: 4750, wins: 542, avatar: "📚" },
-      { rank: 3, name: "RecursionQueen", elo: 4500, wins: 478, avatar: "👸" },
-      { rank: 4, name: "BigONotation", elo: 4250, wins: 401, avatar: "📈" },
-      { rank: 5, name: "HashTableHero", elo: 4000, wins: 356, avatar: "🦸‍♂️" }
+      { rank: 1, name: "AlgoWiz", elo: 4999, wins: 666, shibaColor: "amber" },
+      { rank: 2, name: "DataSt", elo: 4750, wins: 542, shibaColor: "blue" },
+      { rank: 3, name: "Recurs", elo: 4500, wins: 478, shibaColor: "pink" },
+      { rank: 4, name: "BigONo", elo: 4250, wins: 401, shibaColor: "default" },
+      { rank: 5, name: "HashTa", elo: 4000, wins: 356, shibaColor: "red" }
     ],
     hard: [
-      { rank: 1, name: "CodeGenius42", elo: 6969, wins: 1337, avatar: "🧠" },
-      { rank: 2, name: "LeetCodeLegend", elo: 6420, wins: 999, avatar: "⚡" },
-      { rank: 3, name: "BinarySearchBeast", elo: 6180, wins: 888, avatar: "🔍" },
-      { rank: 4, name: "DynamicProgrammer", elo: 5950, wins: 777, avatar: "💎" },
-      { rank: 5, name: "GraphTraverser", elo: 5730, wins: 654, avatar: "🕸️" }
+      { rank: 1, name: "CodeGe", elo: 6969, wins: 1337, shibaColor: "magenta" },
+      { rank: 2, name: "LeetCo", elo: 6420, wins: 999, shibaColor: "lime" },
+      { rank: 3, name: "Binary", elo: 6180, wins: 888, shibaColor: "silver" },
+      { rank: 4, name: "Dynami", elo: 5950, wins: 777, shibaColor: "cyan" },
+      { rank: 5, name: "GraphT", elo: 5730, wins: 654, shibaColor: "default" }
     ]
   }
 
@@ -49,14 +50,14 @@ function Leaderboard() {
               <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-amber-200 text-amber-900 font-bold text-sm">
                 #{player.rank}
               </div>
-              <span className="text-2xl flex-shrink-0">{player.avatar}</span>
+              <CustomShibaAvatar size={40} colorId={player.shibaColor} className="flex-shrink-0" />
               <div className="min-w-0 flex-1">
-                <p className="font-bold text-sm truncate">{player.name}</p>
+                <p className="font-bold text-xs truncate">{player.name}</p>
                 <p className="text-xs text-gray-600">{player.wins} wins</p>
               </div>
             </div>
             <div className="text-right flex-shrink-0 ml-2">
-              <p className="font-bold text-lg" style={{ color }}>{player.elo.toLocaleString()}</p>
+              <p className="font-bold text-xs" style={{ color }}>{player.elo.toLocaleString()}</p>
               <p className="text-xs text-gray-500">ELO</p>
             </div>
           </div>
