@@ -29,6 +29,9 @@ function GameRoom({ lobby, players, playerName }) {
   // Spectator emoji reactions (NEW - isolated)
   const [spectatorEmojis, setSpectatorEmojis] = useState([]);
   
+  // Live code broadcasting (NEW - isolated)
+  const [codeUpdateTimeout, setCodeUpdateTimeout] = useState(null);
+  
   // Set game start time when lobby status becomes 'playing'
   useEffect(() => {
     if (lobby?.status === 'playing' && !gameStartTime) {
@@ -45,6 +48,15 @@ function GameRoom({ lobby, players, playerName }) {
       return () => clearInterval(interval);
     }
   }, [gameStartTime, lobby?.status]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (codeUpdateTimeout) {
+        clearTimeout(codeUpdateTimeout);
+      }
+    };
+  }, [codeUpdateTimeout]);
 
   // Attack system handlers (NEW - isolated from existing logic)
   useEffect(() => {
@@ -111,6 +123,28 @@ function GameRoom({ lobby, players, playerName }) {
       emit('send_attack', { attackType });
       console.log('Sending attack:', attackType);
     }
+  };
+
+  // Debounced code broadcasting to spectators (NEW - doesn't affect game logic)
+  const broadcastCodeUpdate = (newCode) => {
+    if (lobby?.status === 'playing' && !gameFinished) {
+      // Clear existing timeout
+      if (codeUpdateTimeout) {
+        clearTimeout(codeUpdateTimeout);
+      }
+      
+      // Set new timeout to broadcast after 300ms of no typing
+      const timeout = setTimeout(() => {
+        emit('code_update', { code: newCode });
+      }, 300);
+      
+      setCodeUpdateTimeout(timeout);
+    }
+  };
+
+  const handleCodeChange = (newCode) => {
+    setCode(newCode);
+    broadcastCodeUpdate(newCode); // Broadcast to spectators
   };
 
   // Debug logging
@@ -279,7 +313,7 @@ function GameRoom({ lobby, players, playerName }) {
               language="python"
               theme="vs-dark"
               value={code}
-              onChange={setCode}
+              onChange={handleCodeChange}
               options={{
                 minimap: { enabled: false },
                 fontSize: 14,

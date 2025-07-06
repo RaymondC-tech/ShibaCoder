@@ -442,6 +442,9 @@ async def websocket_endpoint(websocket: WebSocket):
             elif event == "spectator_emoji":
                 await handle_spectator_emoji(client_id, payload)
                 
+            elif event == "code_update":
+                await handle_code_update(client_id, payload)
+                
     except WebSocketDisconnect:
         print(f"Client {client_id} disconnected")
         await handle_disconnect(client_id)
@@ -1055,6 +1058,40 @@ async def handle_spectator_emoji(client_id: str, data: dict):
         
     except Exception as e:
         await send_to_client(client_id, "error", {"message": f"Failed to send emoji: {str(e)}"})
+
+async def handle_code_update(client_id: str, data: dict):
+    """Handle live code updates from players - broadcast to spectators only"""
+    try:
+        if client_id not in players or not players[client_id]["lobby"]:
+            return
+        
+        # Only players (not spectators) can send code updates
+        if players[client_id].get("role") == "spectator":
+            return
+        
+        lobby_id = players[client_id]["lobby"]
+        
+        if lobby_id not in lobbies:
+            return
+        
+        lobby = lobbies[lobby_id]
+        
+        # Only broadcast during active game
+        if lobby["status"] != "playing":
+            return
+        
+        code = data.get("code", "")
+        player_name = players[client_id]["name"]
+        
+        # Broadcast live code to spectators only
+        await broadcast_to_spectators(lobby_id, "live_code_update", {
+            "player_id": client_id,
+            "player_name": player_name,
+            "code": code
+        })
+        
+    except Exception as e:
+        pass  # Silently ignore errors to not disrupt gameplay
 
 async def broadcast_to_spectators(lobby_id: str, event: str, data: dict):
     """Broadcast event to all spectators in a specific lobby"""
