@@ -33,6 +33,9 @@ function GameRoom({ lobby, players, playerName }) {
   // Live code broadcasting (NEW - isolated) - use useRef to prevent re-renders
   const codeUpdateTimeoutRef = useRef(null);
   
+  // ELO update state (NEW - isolated)
+  const [eloChange, setEloChange] = useState(null); // +10, -10, or null
+  
   // Set game start time when lobby status becomes 'playing'
   useEffect(() => {
     if (lobby?.status === 'playing' && !gameStartTime) {
@@ -49,6 +52,36 @@ function GameRoom({ lobby, players, playerName }) {
       return () => clearInterval(interval);
     }
   }, [gameStartTime, lobby?.status]);
+
+  // ELO Update System (NEW - isolated)
+  useEffect(() => {
+    if (gameFinished && playerName) {
+      const isWinner = gameFinished.winner?.trim().toLowerCase() === playerName?.trim().toLowerCase();
+      const eloAdjustment = isWinner ? 10 : -10;
+      
+      // Get current ELO from localStorage
+      let currentELO = localStorage.getItem('shibacoder_player_elo');
+      if (!currentELO) {
+        currentELO = Math.floor(Math.random() * 10000); // Default if not exists
+      } else {
+        currentELO = parseInt(currentELO);
+      }
+      
+      // Update ELO
+      const newELO = Math.max(0, currentELO + eloAdjustment); // Prevent negative ELO
+      localStorage.setItem('shibacoder_player_elo', newELO.toString());
+      
+      // Show ELO change notification
+      setEloChange(eloAdjustment);
+      
+      // Clear notification after 5 seconds
+      setTimeout(() => {
+        setEloChange(null);
+      }, 5000);
+      
+      console.log(`🎯 ELO Updated: ${currentELO} → ${newELO} (${eloAdjustment > 0 ? '+' : ''}${eloAdjustment})`);
+    }
+  }, [gameFinished, playerName]);
 
   // Cleanup timeout on unmount - simplified to prevent closure issues
   useEffect(() => {
@@ -379,6 +412,23 @@ function GameRoom({ lobby, players, playerName }) {
           {emojiData.emoji}
         </div>
       ))}
+
+      {/* ELO Change Notification (NEW) */}
+      {eloChange && (
+        <div className="fixed top-20 right-6 z-50 animate-pulse">
+          <div className={`nes-container ${eloChange > 0 ? 'is-success' : 'is-error'} text-center`}>
+            <p className="text-sm font-bold">
+              {eloChange > 0 ? '🎉 Victory!' : '💔 Defeat!'}
+            </p>
+            <p className="text-lg font-bold">
+              ELO {eloChange > 0 ? '+' : ''}{eloChange}
+            </p>
+            <p className="text-xs">
+              {eloChange > 0 ? 'Great job!' : 'Better luck next time!'}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

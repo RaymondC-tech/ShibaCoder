@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import './Navbar.css'
 
 function Navbar() {
-  // Simple ELO system using localStorage (minimal addition)
+  // ELO state that can be refreshed
+  const [playerELO, setPlayerELO] = useState(0)
+
+  // Get ELO from localStorage
   const getPlayerELO = () => {
     let elo = localStorage.getItem('shibacoder_player_elo')
     if (!elo) {
@@ -12,7 +16,28 @@ function Navbar() {
     return parseInt(elo)
   }
 
-  const playerELO = getPlayerELO()
+  // Initialize and refresh ELO
+  useEffect(() => {
+    setPlayerELO(getPlayerELO())
+    
+    // Refresh ELO when window gains focus (after games)
+    const handleFocus = () => {
+      setPlayerELO(getPlayerELO())
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    
+    // Also refresh every 5 seconds to catch updates
+    const interval = setInterval(() => {
+      setPlayerELO(getPlayerELO())
+    }, 5000)
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      clearInterval(interval)
+    }
+  }, [])
+
   const getELOColor = (elo) => {
     if (elo < 3000) return { bg: 'bg-green-100', text: 'text-green-800', icon: '🟢' }
     if (elo < 6000) return { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: '🟡' }
