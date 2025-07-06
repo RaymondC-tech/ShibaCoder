@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
 import { useLobby } from '../hooks/useLobby';
 import AttackQuestions from './AttackQuestions';
@@ -30,8 +30,8 @@ function GameRoom({ lobby, players, playerName }) {
   // Spectator emoji reactions (NEW - isolated)
   const [spectatorEmojis, setSpectatorEmojis] = useState([]);
   
-  // Live code broadcasting (NEW - isolated)
-  const [codeUpdateTimeout, setCodeUpdateTimeout] = useState(null);
+  // Live code broadcasting (NEW - isolated) - use useRef to prevent re-renders
+  const codeUpdateTimeoutRef = useRef(null);
   
   // Set game start time when lobby status becomes 'playing'
   useEffect(() => {
@@ -50,14 +50,14 @@ function GameRoom({ lobby, players, playerName }) {
     }
   }, [gameStartTime, lobby?.status]);
 
-  // Cleanup timeout on unmount
+  // Cleanup timeout on unmount - simplified to prevent closure issues
   useEffect(() => {
     return () => {
-      if (codeUpdateTimeout) {
-        clearTimeout(codeUpdateTimeout);
+      if (codeUpdateTimeoutRef.current) {
+        clearTimeout(codeUpdateTimeoutRef.current);
       }
     };
-  }, [codeUpdateTimeout]);
+  }, []);
 
   // Attack system handlers (NEW - isolated from existing logic)
   useEffect(() => {
@@ -126,22 +126,20 @@ function GameRoom({ lobby, players, playerName }) {
     }
   };
 
-  // Debounced code broadcasting to spectators (NEW - doesn't affect game logic)
-  const broadcastCodeUpdate = (newCode) => {
+  // Stable broadcast function with latest emit reference - prevents stale closures
+  const broadcastCodeUpdate = useCallback((newCode) => {
     if (lobby?.status === 'playing' && !gameFinished) {
       // Clear existing timeout
-      if (codeUpdateTimeout) {
-        clearTimeout(codeUpdateTimeout);
+      if (codeUpdateTimeoutRef.current) {
+        clearTimeout(codeUpdateTimeoutRef.current);
       }
       
       // Set new timeout to broadcast after 300ms of no typing
-      const timeout = setTimeout(() => {
+      codeUpdateTimeoutRef.current = setTimeout(() => {
         emit('code_update', { code: newCode });
       }, 300);
-      
-      setCodeUpdateTimeout(timeout);
     }
-  };
+  }, [lobby?.status, gameFinished, emit]);
 
   const handleCodeChange = (newCode) => {
     setCode(newCode);
