@@ -62,7 +62,7 @@ function Navbar() {
               className="nes-btn is-warning text-xs px-4 py-1 daily-glow"
               style={{ height: '32px' }}
             >
-              ✨ Daily
+              Daily
             </button>
           </Link>
           <Link to="/leaderboard">

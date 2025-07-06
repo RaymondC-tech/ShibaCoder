@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import CloudBackground from './CloudBackground'
 import ShibaSprite from './ShibaSprite'
 import Navbar from './Navbar'
+import CustomShibaAvatar from './CustomShibaAvatar'
 import './DailyChallenge.css'
 
 function DailyChallenge() {
@@ -43,11 +44,11 @@ function DailyChallenge() {
       }
     },
     leaderboard: [
-      { rank: 1, name: "SpeedDemon", time: "0:45", avatar: "⚡" },
-      { rank: 2, name: "QuickCoder", time: "1:02", avatar: "🚀" },
-      { rank: 3, name: "FastFingers", time: "1:15", avatar: "💨" },
-      { rank: 4, name: "RapidDev", time: "1:23", avatar: "🏃" },
-      { rank: 5, name: "SwiftSolver", time: "1:37", avatar: "🦅" }
+      { rank: 1, name: "SpeedDemon", time: "0:45", shibaColor: "lime" },
+      { rank: 2, name: "QuickCoder", time: "1:02", shibaColor: "red" },
+      { rank: 3, name: "FastFingers", time: "1:15", shibaColor: "default" },
+      { rank: 4, name: "RapidDev", time: "1:23", shibaColor: "cyan" },
+      { rank: 5, name: "SwiftSolver", time: "1:37", shibaColor: "default" }
     ],
     stats: {
       attempts: 1337,
@@ -119,10 +120,10 @@ function DailyChallenge() {
                   >
                     <div className="flex items-center gap-3">
                       <span className="font-bold">#{player.rank}</span>
-                      <span className="text-2xl">{player.avatar}</span>
+                      <CustomShibaAvatar size={32} colorId={player.shibaColor} />
                       <span className="font-semibold">{player.name}</span>
                     </div>
-                    <span className="font-mono font-bold text-lg">{player.time}</span>
+                    <span className="font-mono font-bold text-xs">{player.time}</span>
                   </div>
                 ))}
               </div>
