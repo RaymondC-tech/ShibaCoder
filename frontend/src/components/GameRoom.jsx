@@ -26,6 +26,9 @@ function GameRoom({ lobby, players, playerName }) {
   // Education modal state (ISOLATED - doesn't affect game logic)
   const [showEducationModal, setShowEducationModal] = useState(false);
   
+  // Spectator emoji reactions (NEW - isolated)
+  const [spectatorEmojis, setSpectatorEmojis] = useState([]);
+  
   // Set game start time when lobby status becomes 'playing'
   useEffect(() => {
     if (lobby?.status === 'playing' && !gameStartTime) {
@@ -75,10 +78,31 @@ function GameRoom({ lobby, players, playerName }) {
       }, duration);
     };
 
+    const handleSpectatorEmojiReaction = (data) => {
+      console.log('🎉 Spectator emoji reaction:', data.emoji, 'from', data.spectatorName);
+      
+      // Add emoji to display
+      const emojiId = Date.now() + Math.random();
+      setSpectatorEmojis(prev => [...prev, {
+        id: emojiId,
+        emoji: data.emoji,
+        spectatorName: data.spectatorName,
+        x: Math.random() * 80 + 10, // Random position 10-90%
+        y: Math.random() * 80 + 10
+      }]);
+      
+      // Remove emoji after 4 seconds
+      setTimeout(() => {
+        setSpectatorEmojis(prev => prev.filter(e => e.id !== emojiId));
+      }, 4000);
+    };
+
     on('attack_received', handleAttackReceived);
+    on('spectator_emoji_reaction', handleSpectatorEmojiReaction);
     
     return () => {
       off('attack_received', handleAttackReceived);
+      off('spectator_emoji_reaction', handleSpectatorEmojiReaction);
     };
   }, [on, off]);
 
@@ -295,6 +319,22 @@ function GameRoom({ lobby, players, playerName }) {
         isOpen={showEducationModal}
         onClose={() => setShowEducationModal(false)}
       />
+
+      {/* Spectator Emoji Overlay */}
+      {spectatorEmojis.map((emojiData) => (
+        <div
+          key={emojiData.id}
+          className="fixed pointer-events-none z-50 text-4xl animate-bounce"
+          style={{
+            left: `${emojiData.x}%`,
+            top: `${emojiData.y}%`,
+            animation: 'bounce 1s infinite, fadeIn 4s ease-out'
+          }}
+          title={`From ${emojiData.spectatorName}`}
+        >
+          {emojiData.emoji}
+        </div>
+      ))}
     </div>
   );
 }
