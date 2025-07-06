@@ -247,6 +247,7 @@ function GameRoom({ lobby, players, playerName }) {
             <CustomShibaAvatar 
               size={32}
               className="shiba-avatar opponent-shiba"
+              colorId="default"
             />
             <span>{opponent?.name || 'Waiting...'}</span>
             <div className="progress-bar">
