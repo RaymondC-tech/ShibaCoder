@@ -4,7 +4,7 @@ import { useLobby } from '../hooks/useLobby.js'
 import { useWebSocket } from '../hooks/useWebSocket.jsx'
 import CustomShibaAvatar from './CustomShibaAvatar'
 
-function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobby, onGameStart }) {
+function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobby }) {
   if (!lobby) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-68px)] p-4">
@@ -42,17 +42,6 @@ function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobb
     }
   }, [on, off])
   
-  // Debug logging
-  console.log('WaitingRoom state:', {
-    playerName,
-    currentPlayer,
-    opponent,
-    isFull,
-    allReady,
-    players,
-    connected,
-    countdown
-  })
 
   const handleLeaveLobby = () => {
     sounds.buttonClick()
@@ -64,10 +53,6 @@ function WaitingRoom({ lobby, players, playerName, connected, error, onLeaveLobb
     playerReady()
   }
 
-  const handleGameStart = () => {
-    sounds.buttonClick()
-    onGameStart()
-  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-68px)] p-4">
