@@ -5,6 +5,7 @@ import AttackQuestions from './AttackQuestions';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { sounds } from '../utils/sounds';
 import EducationModal from './EducationModal';
+import CustomShibaAvatar from './CustomShibaAvatar';
 import './GameRoom.css';
 
 function GameRoom({ lobby, players, playerName }) {
@@ -232,9 +233,8 @@ function GameRoom({ lobby, players, playerName }) {
         </div>
         <div className="players-section">
           <div className="player-status">
-            <img 
-              src="/shibaface.svg" 
-              alt="Player Shiba" 
+            <CustomShibaAvatar 
+              size={32}
               className="shiba-avatar player-shiba"
             />
             <span>{currentPlayer?.name || 'You'}</span>
@@ -244,9 +244,8 @@ function GameRoom({ lobby, players, playerName }) {
           </div>
           <div className="vs">VS</div>
           <div className="player-status">
-            <img 
-              src="/shibaface.svg" 
-              alt="Opponent Shiba" 
+            <CustomShibaAvatar 
+              size={32}
               className="shiba-avatar opponent-shiba"
             />
             <span>{opponent?.name || 'Waiting...'}</span>
