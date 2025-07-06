@@ -156,6 +156,18 @@ function GameRoom({ lobby, players, playerName }) {
     gameStartTime
   });
 
+  // Debug winner comparison
+  if (gameFinished) {
+    console.log('🏆 WINNER DEBUG:', {
+      'gameFinished.winner': gameFinished.winner,
+      'playerName': playerName,
+      'comparison': gameFinished.winner === playerName,
+      'winnerTrimmed': gameFinished.winner?.trim(),
+      'playerNameTrimmed': playerName?.trim(),
+      'normalizedComparison': gameFinished.winner?.trim().toLowerCase() === playerName?.trim().toLowerCase()
+    });
+  }
+
   // Calculate progress for both players
   const currentPlayer = players.find(p => p.name === playerName);
   const opponent = players.find(p => p.name !== playerName);
@@ -246,14 +258,14 @@ function GameRoom({ lobby, players, playerName }) {
       </div>
 
       {gameFinished && (
-        <div className={`nes-container is-centered ${gameFinished.winner === playerName ? 'winner-banner' : 'loser-banner'}`}>
-          {gameFinished.winner === playerName ? (
+        <div className={`nes-container is-centered ${gameFinished.winner?.trim().toLowerCase() === playerName?.trim().toLowerCase() ? 'winner-banner' : 'loser-banner'}`}>
+          {gameFinished.winner?.trim().toLowerCase() === playerName?.trim().toLowerCase() ? (
             <h2>🎉 You Won! 🎉</h2>
           ) : (
             <h2>😢 You Lost! Better luck next time! 😢</h2>
           )}
           <p className="text-sm mt-2">
-            {gameFinished.winner === playerName 
+            {gameFinished.winner?.trim().toLowerCase() === playerName?.trim().toLowerCase()
               ? "Congratulations on solving the challenge!" 
               : `${gameFinished.winner} solved it first!`
             }
