@@ -61,6 +61,12 @@ function LobbyList({ onCreateLobby, onJoinLobby }) {
     }
   }
 
+  const handleSpectateClick = (lobby) => {
+    sounds.buttonClick()
+    // Navigate to spectator mode - pass lobby info to parent
+    onJoinLobby(lobby.id, null, 'spectator')
+  }
+
   const handleNameSubmit = () => {
     sounds.buttonClick()
     if (playerNameInput.trim()) {
@@ -218,14 +224,25 @@ function LobbyList({ onCreateLobby, onJoinLobby }) {
                         {lobby.playerCount}/{lobby.maxPlayers}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      className={`nes-btn ${lobby.playerCount < lobby.maxPlayers ? 'is-success' : 'is-disabled'} text-xs`}
-                      onClick={() => handleJoinClick(lobby)}
-                      disabled={lobby.playerCount >= lobby.maxPlayers || !connected}
-                    >
-                      {lobby.playerCount >= lobby.maxPlayers ? 'Full' : 'Join'}
-                    </button>
+                    {lobby.playerCount < lobby.maxPlayers ? (
+                      <button
+                        type="button"
+                        className="nes-btn is-success text-xs"
+                        onClick={() => handleJoinClick(lobby)}
+                        disabled={!connected}
+                      >
+                        Join
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="nes-btn is-warning text-xs"
+                        onClick={() => handleSpectateClick(lobby)}
+                        disabled={!connected}
+                      >
+                        👁️ Spectate
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

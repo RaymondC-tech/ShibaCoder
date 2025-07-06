@@ -76,11 +76,22 @@ async def broadcast_to_lobby(lobby_id: str, event: str, data: dict):
     lobby = lobbies[lobby_id]
     message = json.dumps({"event": event, "data": data})
     
+    # Send to players
     for player in lobby["players"]:
         player_id = player["id"]
         if player_id in connections:
             try:
                 await connections[player_id].send_text(message)
+            except:
+                pass
+    
+    # Also send to spectators (so they can watch in real-time)
+    spectators = lobby.get("spectators", [])
+    for spectator in spectators:
+        spectator_id = spectator["id"]
+        if spectator_id in connections:
+            try:
+                await connections[spectator_id].send_text(message)
             except:
                 pass
 
@@ -422,6 +433,15 @@ async def websocket_endpoint(websocket: WebSocket):
             elif event == "send_attack":
                 await handle_send_attack(client_id, payload)
                 
+            elif event == "join_as_spectator":
+                await handle_join_as_spectator(client_id, payload)
+                
+            elif event == "spectator_chat":
+                await handle_spectator_chat(client_id, payload)
+                
+            elif event == "spectator_emoji":
+                await handle_spectator_emoji(client_id, payload)
+                
     except WebSocketDisconnect:
         print(f"Client {client_id} disconnected")
         await handle_disconnect(client_id)
@@ -438,24 +458,35 @@ async def handle_disconnect(client_id: str):
             if lobby_id in lobbies:
                 lobby = lobbies[lobby_id]
                 player_name = player["name"]
+                player_role = player.get("role", "player")
                 
-                # Remove player from lobby
-                lobby["players"] = [p for p in lobby["players"] if p["id"] != client_id]
-                
-                print(f"{player_name} disconnected from lobby '{lobby['name']}' ({lobby_id})")
-                
-                # If lobby is empty, delete it
-                if len(lobby["players"]) == 0:
-                    del lobbies[lobby_id]
-                    print(f"Lobby {lobby_id} deleted - no players remaining")
-                    await broadcast_lobby_list_update()
+                if player_role == "spectator":
+                    # Remove from spectators list
+                    if "spectators" in lobby:
+                        lobby["spectators"] = [s for s in lobby["spectators"] if s["id"] != client_id]
+                        print(f"Spectator {player_name} disconnected from lobby {lobby_id}")
+                        # Notify other spectators
+                        await broadcast_to_spectators(lobby_id, "spectator_list_update", {
+                            "spectators": lobby["spectators"]
+                        })
                 else:
-                    # Notify remaining players
-                    await broadcast_to_lobby(lobby_id, "player_left", {
-                        "playerName": player_name,
-                        "playerCount": len(lobby["players"]),
-                        "players": lobby["players"]
-                    })
+                    # Remove player from lobby
+                    lobby["players"] = [p for p in lobby["players"] if p["id"] != client_id]
+                    
+                    print(f"{player_name} disconnected from lobby '{lobby['name']}' ({lobby_id})")
+                    
+                    # If lobby is empty, delete it
+                    if len(lobby["players"]) == 0:
+                        del lobbies[lobby_id]
+                        print(f"Lobby {lobby_id} deleted - no players remaining")
+                        await broadcast_lobby_list_update()
+                    else:
+                        # Notify remaining players
+                        await broadcast_to_lobby(lobby_id, "player_left", {
+                            "playerName": player_name,
+                            "playerCount": len(lobby["players"]),
+                            "players": lobby["players"]
+                        })
         
         del players[client_id]
     
@@ -510,6 +541,7 @@ async def handle_create_lobby(client_id: str, data: dict):
                 "name": player_name,
                 "ready": False
             }],
+            "spectators": [],  # New: spectator support
             "maxPlayers": 2,
             "createdAt": time.time()
         }
@@ -918,6 +950,127 @@ async def handle_send_attack(client_id: str, data: dict):
         
     except Exception as e:
         await send_to_client(client_id, "error", {"message": f"Failed to send attack: {str(e)}"})
+
+async def handle_join_as_spectator(client_id: str, data: dict):
+    """Handle joining a lobby as spectator"""
+    try:
+        lobby_id = data.get("lobbyId", "").strip()
+        spectator_name = data.get("spectatorName", "").strip()
+        
+        if not lobby_id:
+            await send_to_client(client_id, "error", {"message": "Lobby ID is required"})
+            return
+        
+        if lobby_id not in lobbies:
+            await send_to_client(client_id, "error", {"message": "Lobby not found"})
+            return
+        
+        lobby = lobbies[lobby_id]
+        
+        # Check if already in a lobby
+        if players[client_id]["lobby"]:
+            await send_to_client(client_id, "error", {"message": "You are already in a lobby"})
+            return
+        
+        if not spectator_name:
+            spectator_name = f"Spectator{client_id[-8:]}"
+        
+        # Add to spectators (ensure spectators array exists for old lobbies)
+        if "spectators" not in lobby:
+            lobby["spectators"] = []
+        lobby["spectators"].append({
+            "id": client_id,
+            "name": spectator_name
+        })
+        
+        # Update player info
+        players[client_id]["name"] = spectator_name
+        players[client_id]["lobby"] = lobby_id
+        players[client_id]["role"] = "spectator"
+        
+        print(f"{spectator_name} joined as spectator in lobby {lobby_id}")
+        
+        # Send lobby data to spectator
+        await send_to_client(client_id, "spectator_joined", {
+            "lobbyId": lobby_id,
+            "lobbyData": lobby
+        })
+        
+        # Notify other spectators
+        await broadcast_to_spectators(lobby_id, "spectator_list_update", {
+            "spectators": lobby["spectators"]
+        })
+        
+    except Exception as e:
+        await send_to_client(client_id, "error", {"message": f"Failed to join as spectator: {str(e)}"})
+
+async def handle_spectator_chat(client_id: str, data: dict):
+    """Handle spectator chat messages"""
+    try:
+        if client_id not in players or not players[client_id]["lobby"]:
+            await send_to_client(client_id, "error", {"message": "You are not in a lobby"})
+            return
+        
+        if players[client_id].get("role") != "spectator":
+            await send_to_client(client_id, "error", {"message": "Only spectators can chat"})
+            return
+        
+        lobby_id = players[client_id]["lobby"]
+        message = data.get("message", "").strip()
+        
+        if not message:
+            return
+        
+        # Broadcast chat to all spectators
+        await broadcast_to_spectators(lobby_id, "spectator_chat_message", {
+            "spectatorName": players[client_id]["name"],
+            "message": message,
+            "timestamp": time.time()
+        })
+        
+    except Exception as e:
+        await send_to_client(client_id, "error", {"message": f"Failed to send chat: {str(e)}"})
+
+async def handle_spectator_emoji(client_id: str, data: dict):
+    """Handle spectator emoji reactions"""
+    try:
+        if client_id not in players or not players[client_id]["lobby"]:
+            await send_to_client(client_id, "error", {"message": "You are not in a lobby"})
+            return
+        
+        if players[client_id].get("role") != "spectator":
+            await send_to_client(client_id, "error", {"message": "Only spectators can send emojis"})
+            return
+        
+        lobby_id = players[client_id]["lobby"]
+        emoji = data.get("emoji", "🔥")
+        
+        # Send emoji to players in the lobby
+        await broadcast_to_lobby(lobby_id, "spectator_emoji_reaction", {
+            "emoji": emoji,
+            "spectatorName": players[client_id]["name"]
+        })
+        
+        print(f"Spectator {players[client_id]['name']} sent emoji {emoji} in lobby {lobby_id}")
+        
+    except Exception as e:
+        await send_to_client(client_id, "error", {"message": f"Failed to send emoji: {str(e)}"})
+
+async def broadcast_to_spectators(lobby_id: str, event: str, data: dict):
+    """Broadcast event to all spectators in a specific lobby"""
+    if lobby_id not in lobbies:
+        return
+    
+    lobby = lobbies[lobby_id]
+    message = json.dumps({"event": event, "data": data})
+    
+    for spectator in lobby["spectators"]:
+        spectator_id = spectator["id"]
+        if spectator_id in connections:
+            try:
+                await connections[spectator_id].send_text(message)
+            except:
+                pass
 
 if __name__ == "__main__":
     import uvicorn

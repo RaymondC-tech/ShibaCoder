@@ -12,6 +12,7 @@ import Modal from './components/Modal'
 import CloudBackground from './components/CloudBackground'
 import ShibaSprite from './components/ShibaSprite'
 import WaitingRoom from './components/WaitingRoom'
+import SpectatorRoom from './components/SpectatorRoom'
 import { useLobby } from './hooks/useLobby.js'
 import './App.css'
 
@@ -28,7 +29,10 @@ function GameLobby() {
     connected, 
     error,
     leaveLobby,
-    currentPlayerName 
+    currentPlayerName,
+    isSpectator,
+    spectatorName,
+    joinAsSpectator
   } = useLobby()
 
   // Watch for lobby state changes to update game state
@@ -36,37 +40,47 @@ function GameLobby() {
     console.log('App: Lobby state changed:', {
       currentLobby,
       status: currentLobby?.status,
-      gameState
+      gameState,
+      isSpectator
     });
     
     if (currentLobby) {
-      // When we join/create a lobby, go to waiting room
-      if (currentLobby.status === 'waiting') {
-        setGameState('waiting')
-        // Use the current player name from the lobby hook
-        if (currentPlayerName) {
-          setPlayerName(currentPlayerName)
+      if (isSpectator) {
+        // Spectator mode - always go to spectating state
+        setGameState('spectating')
+      } else {
+        // Player mode - follow normal flow
+        if (currentLobby.status === 'waiting') {
+          setGameState('waiting')
+          // Use the current player name from the lobby hook
+          if (currentPlayerName) {
+            setPlayerName(currentPlayerName)
+          }
         }
-      }
-      // When game starts, go to playing state
-      else if (currentLobby.status === 'playing') {
-        console.log('App: Setting game state to playing');
-        setGameState('playing')
+        else if (currentLobby.status === 'playing') {
+          console.log('App: Setting game state to playing');
+          setGameState('playing')
+        }
       }
     } else {
       // When we leave lobby or get disconnected, go back to lobby list
       setGameState('lobbyList')
     }
-  }, [currentLobby, currentPlayerName])
+  }, [currentLobby, currentPlayerName, isSpectator])
 
   const handleCreateLobby = () => {
     setShowCreateModal(true)
   }
 
-  const handleJoinRoom = (lobbyId, pin) => {
-    // Socket.IO join logic is already handled in LobbyList component
-    // This function is kept for compatibility but the real work happens in useLobby hook
-    console.log('Joining lobby:', lobbyId, pin ? 'with PIN' : 'public')
+  const handleJoinRoom = (lobbyId, pin, mode) => {
+    if (mode === 'spectator') {
+      // Join as spectator
+      console.log('Joining as spectator:', lobbyId)
+      joinAsSpectator(lobbyId)
+    } else {
+      // Normal join logic is handled in LobbyList component
+      console.log('Joining lobby:', lobbyId, pin ? 'with PIN' : 'public')
+    }
   }
 
   const handleCreateRoom = (lobbyData) => {
@@ -127,6 +141,15 @@ function GameLobby() {
             lobby={currentLobby}
             players={players}
             playerName={currentPlayerName || playerName}
+          />
+        )}
+        
+        {gameState === 'spectating' && (
+          <SpectatorRoom
+            lobby={currentLobby}
+            players={players}
+            spectatorName={spectatorName}
+            onLeaveLobby={handleLeaveLobby}
           />
         )}
       </div>
