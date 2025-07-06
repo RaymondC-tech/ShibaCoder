@@ -47,6 +47,15 @@ function Navbar() {
               About
             </button>
           </Link>
+          <Link to="/discussion">
+            <button 
+              type="button" 
+              className="nes-btn is-normal text-xs px-4 py-1"
+              style={{ height: '32px' }}
+            >
+              Discussion
+            </button>
+          </Link>
           <Link to="/daily">
             <button 
               type="button" 
