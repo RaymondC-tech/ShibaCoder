@@ -525,3 +525,11 @@
   80% { transform: translate(-50%, -50%) scale(0.9) rotate(-2deg); opacity: 0.95; }
   90% { transform: translate(-50%, -50%) scale(1.05) rotate(1deg); opacity: 1; }
 }
+
+/* Spectator emoji fade animation */
+@keyframes fadeIn {
+  0% { opacity: 1; transform: scale(0.5); }
+  20% { opacity: 1; transform: scale(1.2); }
+  40% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.8); }
+}
